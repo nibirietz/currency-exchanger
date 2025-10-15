@@ -1,4 +1,5 @@
 from src.server import Server
+from src.service import Service
 
 
 def main():
