@@ -1,58 +1,58 @@
 from http import HTTPStatus
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler, BaseHTTPRequestHandler
 import json
-
+from urllib.parse import urlparse, parse_qs
 
 from src.service import Service
 
 service = Service()
 
 
-class ServerHandler(SimpleHTTPRequestHandler):
+class Router:
+    def __init__(self):
+        self.routes = {}
+
+    def route(self, method: str, path: str):
+        def wrapper(func):
+            self.routes[(method, path)] = func
+            return func
+
+        return wrapper
+
+
+router = Router()
+
+
+class ServerHandler(BaseHTTPRequestHandler):
+    def _request_parse_request(self):
+        parsed_path = urlparse(self.path)
+        query_parameters = parse_qs(parsed_path.query)
+
+        simple_query_params = {}
+
+        for key, item in query_parameters.items():
+            if len(item) == 1:
+                simple_query_params[key] = item[0]
+            else:
+                simple_query_params[key] = item
+
+        return {
+            'path': parsed_path.path,
+            'query_parameters': simple_query_params,
+        }
+
+    def handle_method(self, method: str):
+        request_data = self._request_parse_request()
+        handler = router.routes[(method, request_data['path'])]
+        if len(request_data['query_parameters']) != 0:
+            handler(self, request_data['query_parameters'])
+        else:
+            handler(self)
+
     def do_GET(self):
-        print('Выполнен GET-запрос.')
-        self.send_header('Content-type', 'application/json; charset=utf-8')
-        path = self.path.split('/')
-        match path[1]:
-            case '/':
-                self.send_response(HTTPStatus.OK)
-                self.end_headers()
-                self.wfile.write(json.dumps({'status': 'OK'}).encode())
-            case 'currencies':
-                self.get_currencies()
-            case 'currency':
-                self.get_currency(path[2])
-            case _:
-                self.send_response(HTTPStatus.NOT_FOUND)
-                self.end_headers()
-                self.wfile.write(json.dumps({'status': 'Page is not found.'}).encode())
+        print(router.routes)
+        self.handle_method('GET')
 
-    def get_currencies(self):
-        try:
-            currencies = service.get_currencies()
-        except NotImplemented:
-            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-            raise NotImplemented
-        self.send_response(HTTPStatus.ACCEPTED)
-        self.wfile.write(json.dumps(currencies).encode())
-
-    def get_currency(self, currency: str):
-        try:
-            currency = service.get_currency()
-        except NotImplemented:
-            self.send_response(HTTPStatus.INTERNAL_SERVER_ERROR)
-            raise NotImplemented
-        self.send_response(HTTPStatus.ACCEPTED)
-        self.wfile.write(json.dumps(currency).encode())
-
-
-class Server:
-    def __init__(self, address: str, port: int):
-        self.server_address = (address, port)
-        self.server_class = HTTPServer
-        self.handler_class = ServerHandler
-        self.httpd = self.server_class(self.server_address, self.handler_class)
-
-    def run(self):
-        print(f'Запуск сервера на порту {self.server_address[1]}')
-        self.httpd.serve_forever()
+    @router.route(method='GET', path='/currencies')
+    def get_currencies(self, **kwargs):
+        self.wfile.write('{}'.encode())
