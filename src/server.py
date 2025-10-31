@@ -6,8 +6,6 @@ from urllib.parse import urlparse, parse_qs
 
 from src.service import Service
 
-service = Service()
-
 
 class Router:
     def __init__(self):
@@ -38,6 +36,8 @@ router = Router()
 
 
 class ServerHandler(BaseHTTPRequestHandler):
+    service = Service()
+
     def _find_route(self, method: str, path: str):
         if (method, path) in router.routes:
             return router.routes[(method, path)], {}
@@ -74,28 +74,50 @@ class ServerHandler(BaseHTTPRequestHandler):
         #     self.not_founded()
         #     return
         # handler = router.routes[(method, request_data['path'])]
+        print(handler, path_parameters)
         if len(request_data['query_parameters']) != 0:
             handler(self, **path_parameters, **request_data['query_parameters'])
         else:
             handler(self, **path_parameters)
 
     def not_founded(self):
+        print('aaa')
         self.wfile.write('Not founded.'.encode())
 
     def do_GET(self):
         self._handle_method('GET')
         print(self.path)
 
-    @router.route(method='GET', path='/currencies/')
+    def do_POST(self):
+        self._handle_method('POST')
+        print(self.path)
+
+    @router.route(method='GET', path='/')
+    def get_root(self):
+        self.send_response(202)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write('Hello!'.encode())
+
+    @router.route(method='GET', path='/currencies')
     def get_currencies(self):
         self.send_response(202)
         self.send_header('Content-type', 'application/json; charset=utf-8')
         self.end_headers()
-        self.wfile.write('{ "RU": 1 }'.encode())
+        currencies = self.service.get_currencies()
+        self.wfile.write(json.dumps(currencies).encode())
 
-    @router.route(method='GET', path='/currency/{currency_id}')
-    def get_currency(self, currency_id: int):
+    @router.route(method='GET', path='/currency/{currency_name}')
+    def get_currency(self, currency_name: str):
         self.send_response(202)
         self.send_header('Content-type', 'application/json; charset=utf-8')
         self.end_headers()
-        self.wfile.write(f'{{"tst": {currency_id}}}'.encode())
+        currency = self.service.get_currency(currency_name)
+        self.wfile.write(json.dumps(currency).encode())
+
+    @router.route(method='POST', path='/currencies')
+    def add_currency(self):
+        content = self.headers.get('Content-type', '')
+        self.send_response(202)
+        self.end_headers()
+        print(content)
