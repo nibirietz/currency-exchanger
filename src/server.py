@@ -1,36 +1,10 @@
-from http import HTTPStatus
-from http.server import HTTPServer, SimpleHTTPRequestHandler, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler
 import json
-from parse import compile
 from urllib.parse import urlparse, parse_qs
 
+from src.dto.currency_post_dto import CurrencyPost
+from src.router import Router
 from src.service import Service
-
-
-class Router:
-    def __init__(self):
-        self.routes = {}
-        self.pattern_routes = []
-
-    def route(self, method: str, path: str):
-        def decorator(func):
-            if '{' in path or '}' in path:
-                parser = compile(path)
-                self.pattern_routes.append(
-                    {
-                        "parser": parser,
-                        "function": func,
-                        "method": method,
-                        "path": path,
-                    }
-                )
-
-            self.routes[(method, path)] = func
-
-            return func
-
-        return decorator
-
 
 router = Router()
 
@@ -70,18 +44,32 @@ class ServerHandler(BaseHTTPRequestHandler):
     def _handle_method(self, method: str):
         request_data = self._request_parse_request()
         handler, path_parameters = self._find_route(method, request_data['path'])
-        # if (method, request_data['path']) not in router.routes.keys():
-        #     self.not_founded()
-        #     return
+        if (method, request_data['path']) not in router.routes.keys():
+            self.not_founded()
+            return
         # handler = router.routes[(method, request_data['path'])]
-        print(handler, path_parameters)
+        # print(handler, path_parameters)
         if len(request_data['query_parameters']) != 0:
             handler(self, **path_parameters, **request_data['query_parameters'])
         else:
             handler(self, **path_parameters)
 
+    def parse_body_to_dict(self) -> dict:
+        content_length = int(self.headers['Content-Length'])
+        raw_body = self.rfile.read(content_length)
+        raw_dict = parse_qs(raw_body)
+        result = {key.decode(): value[0].decode() for key, value in raw_dict.items()}
+        for key, value in result.items():
+            if value.isdigit():
+                result[key] = float(value) if float(value) != int(value) else int(value)
+
+        print(result)
+        return result
+
     def not_founded(self):
-        print('aaa')
+        self.send_response(404)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
         self.wfile.write('Not founded.'.encode())
 
     def do_GET(self):
@@ -94,10 +82,14 @@ class ServerHandler(BaseHTTPRequestHandler):
 
     @router.route(method='GET', path='/')
     def get_root(self):
-        self.send_response(202)
-        self.send_header('Content-type', 'application/json')
-        self.end_headers()
-        self.wfile.write('Hello!'.encode())
+        try:
+            self.send_response(202)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps('Hello!').encode())
+        except NotImplemented:
+            self.send_response(400)
+            self.wfile.write(json.dumps('Not Implemented').encode())
 
     @router.route(method='GET', path='/currencies')
     def get_currencies(self):
@@ -117,7 +109,10 @@ class ServerHandler(BaseHTTPRequestHandler):
 
     @router.route(method='POST', path='/currencies')
     def add_currency(self):
-        content = self.headers.get('Content-type', '')
+        try:
+            currency_post = CurrencyPost(**self.parse_body_to_dict())
+            self.service.post_currency(currency_post)
+        except TypeError:
+            self.send_error(400)
         self.send_response(202)
         self.end_headers()
-        print(content)

@@ -1,6 +1,9 @@
+from src.dto.currency_post_dto import CurrencyPost
+
+
 class Service:
-    def __init__(self):
-        pass
+    def __init__(self, database):
+        self.database = database
 
     def get_currencies(self) -> list[dict]:
         return [
@@ -25,3 +28,6 @@ class Service:
             "code": "RUB",
             "sign": "₽",
         }
+
+    def post_currency(self, currency_post: CurrencyPost):
+        pass
