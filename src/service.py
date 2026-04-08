@@ -1,5 +1,5 @@
 from src.database.db import Database
-from src.dto.currency_dto import CurrencyDto
+from src.database.models import Currency
 from src.dto.currency_post_dto import CurrencyPost
 
 
@@ -7,7 +7,7 @@ class Service:
     def __init__(self, database: Database):
         self.database = database
 
-    def get_all_currencies(self) -> list[CurrencyDto]:
+    def get_all_currencies(self) -> list[Currency]:
         raw_currencies = self.database.get_all_currencies()
         return raw_currencies
 

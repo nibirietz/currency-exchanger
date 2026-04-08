@@ -1,2 +1,2 @@
 class Config:
-    DATABASE_PATH = "db.sqlite"
+    DATABASE_PATH = "src/database/db.sqlite"

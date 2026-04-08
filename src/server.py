@@ -1,7 +1,9 @@
+from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler
 import json
 from urllib.parse import urlparse, parse_qs
 
+from src.database.models import Currency
 from src.dto.currency_post_dto import CurrencyPost
 from src.router import Router
 from src.service import Service
@@ -97,8 +99,9 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             self.send_response(202)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.end_headers()
-            currencies = self.service.get_currencies()
-            self.wfile.write(json.dumps(currencies).encode())
+            currencies: list[Currency] = self.service.get_all_currencies()
+            currencies_view: list[dict] = [asdict(currency) for currency in currencies]
+            self.wfile.write(json.dumps(currencies_view).encode())
 
         @router.route(method='GET', path='/currency/{currency_name}')
         def get_currency(self, currency_name: str):
