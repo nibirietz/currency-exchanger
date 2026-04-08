@@ -1,25 +1,15 @@
+from src.database.db import Database
+from src.dto.currency_dto import CurrencyDto
 from src.dto.currency_post_dto import CurrencyPost
 
 
 class Service:
-    def __init__(self, database):
+    def __init__(self, database: Database):
         self.database = database
 
-    def get_currencies(self) -> list[dict]:
-        return [
-            {
-                "id": 1,
-                "name": "Rouble",
-                "code": "RUB",
-                "sign": "₽",
-            },
-            {
-                "id": 2,
-                "name": "Euro",
-                "code": "EUR",
-                "sign": "€"
-            }
-        ]
+    def get_all_currencies(self) -> list[CurrencyDto]:
+        raw_currencies = self.database.get_all_currencies()
+        return raw_currencies
 
     def get_currency(self, currency_name: str) -> dict:
         return {
