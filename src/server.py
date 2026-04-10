@@ -87,7 +87,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         def get_root(self):
             try:
                 self.send_response(202)
-                self.send_header('Content-type', 'application/json')
+                self.send_header('Content-type', 'application/json; charset=utf-8')
                 self.end_headers()
                 self.wfile.write(json.dumps('Hello!').encode())
             except NotImplemented:
@@ -114,11 +114,22 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         @router.route(method='POST', path='/currencies')
         def add_currency(self):
             try:
-                currency_post = CurrencyPost(**self.parse_body_to_dict())
-                self.service.post_currency(currency_post)
-            except TypeError:
+                currency_view = self.parse_body_to_dict()
+                currency_post = CurrencyPost(name=currency_view["name"], code=currency_view["code"],
+                                             sign=currency_view["sign"])
+                self.service.add_currency(currency_post)
+
+                self.send_response(202)
+                response = json.dumps(currency_view).encode()
+                self.send_header('Content-type', 'application/json; charset=utf-8')
+                self.send_header('Content-Length', str(len(response)))
+                self.end_headers()
+                self.wfile.write(response)
+            except ValueError as e:
                 self.send_error(400)
-            self.send_response(202)
-            self.end_headers()
+                response = json.dumps({"error": str(e)}).encode()
+                self.send_header('Content-Length', str(len(response)))
+                self.end_headers()
+                self.wfile.write(response)
 
     return ServerHandler

@@ -4,16 +4,16 @@ from src.config import Config
 
 
 def create_db():
-    connection = sqlite3.connect("" + Config.DATABASE_PATH)
+    connection = sqlite3.connect(Config.DATABASE_PATH)
     cursor = connection.cursor()
     currency_query = """CREATE TABLE IF NOT EXISTS currencies(
-                             id INTEGER PRIMARY KEY,
-                             code VARCHAR,
+                             id INTEGER PRIMARY KEY AUTOINCREMENT,
+                             code VARCHAR UNIQUE,
                              full_name VARCHAR,
                              sign VARCHAR
                          );"""
     exchange_query = """CREATE TABLE IF NOT EXISTS exchange_rates(
-                             id INTEGER PRIMARY KEY,
+                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                              base_currency_id INTEGER, 
                              target_currency_id INTEGER,
                              rate DECIMAL(6),

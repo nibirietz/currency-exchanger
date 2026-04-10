@@ -19,5 +19,5 @@ class Service:
             "sign": "₽",
         }
 
-    def post_currency(self, currency_post: CurrencyPost):
-        pass
+    def add_currency(self, currency_post: CurrencyPost):
+        self.database.add_currency(currency_post.code, currency_post.name, currency_post.sign)
