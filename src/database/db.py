@@ -17,10 +17,24 @@ class Database:
         currencies: list[Currency] = [self._row_to_currency(row) for row in self.cursor.execute(query).fetchall()]
         return currencies
 
+    def get_currency(self, code: str) -> Currency | None:
+        query = """SELECT * FROM currencies
+                   WHERE code = ?;"""
+        currency_row = self.cursor.execute(query, [code]).fetchall()
+        if not currency_row:
+            return None
+
+        currency = self._row_to_currency(currency_row[0])
+
+        return currency
+
     def add_currency(self, code: str, name: str, sign: str):
         query = """INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?);"""
-        self.cursor.execute(query, (code, name, sign))
-        self.connection.commit()
+        try:
+            self.cursor.execute(query, (code, name, sign))
+            self.connection.commit()
+        except sqlite3.IntegrityError:
+            raise sqlite3.IntegrityError("Все коды должны быть уникальны!")
 
     def _row_to_currency(self, row: sqlite3.Row):
         return Currency(

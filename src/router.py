@@ -18,8 +18,8 @@ class Router:
                         "path": path,
                     }
                 )
-
-            self.routes[(method, path)] = func
+            else:
+                self.routes[(method, path)] = func
 
             return func
 

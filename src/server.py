@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 from src.database.models import Currency
 from src.dto.currency_post_dto import CurrencyPost
 from src.router import Router
-from src.service import Service
+from src.service import Service, CurrencyAlreadyExistsError
 
 router = Router()
 
@@ -25,7 +25,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
                     if result:
                         return pattern_route["function"], result.named
 
-            return self.not_founded(), {}
+            return None, {}
 
         def _request_parse_request(self):
             parsed_path = urlparse(self.path)
@@ -47,11 +47,10 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         def _handle_method(self, method: str):
             request_data = self._request_parse_request()
             handler, path_parameters = self._find_route(method, request_data['path'])
-            if (method, request_data['path']) not in router.routes.keys():
+            if handler is None:
                 self.not_founded()
                 return
-            # handler = router.routes[(method, request_data['path'])]
-            # print(handler, path_parameters)
+
             if len(request_data['query_parameters']) != 0:
                 handler(self, **path_parameters, **request_data['query_parameters'])
             else:
@@ -86,50 +85,43 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         @router.route(method='GET', path='/')
         def get_root(self):
             try:
-                self.send_response(202)
-                self.send_header('Content-type', 'application/json; charset=utf-8')
-                self.end_headers()
-                self.wfile.write(json.dumps('Hello!').encode())
+                self.send_json(202, {"message": "Это главная страница."})
             except NotImplemented:
                 self.send_response(400)
                 self.wfile.write(json.dumps('Not Implemented').encode())
 
         @router.route(method='GET', path='/currencies')
         def get_currencies(self):
-            self.send_response(202)
-            self.send_header('Content-type', 'application/json; charset=utf-8')
-            self.end_headers()
             currencies: list[Currency] = self.service.get_all_currencies()
             currencies_view: list[dict] = [asdict(currency) for currency in currencies]
-            self.wfile.write(json.dumps(currencies_view).encode())
+            self.send_json(202, currencies_view)
 
         @router.route(method='GET', path='/currency/{currency_name}')
         def get_currency(self, currency_name: str):
-            self.send_response(202)
-            self.send_header('Content-type', 'application/json; charset=utf-8')
-            self.end_headers()
             currency = self.service.get_currency(currency_name)
-            self.wfile.write(json.dumps(currency).encode())
+            currency_view = asdict(currency)
+            self.send_json(202, currency_view)
 
         @router.route(method='POST', path='/currencies')
         def add_currency(self):
+            currency_view = self.parse_body_to_dict()
             try:
-                currency_view = self.parse_body_to_dict()
                 currency_post = CurrencyPost(name=currency_view["name"], code=currency_view["code"],
                                              sign=currency_view["sign"])
                 self.service.add_currency(currency_post)
-
-                self.send_response(202)
-                response = json.dumps(currency_view).encode()
-                self.send_header('Content-type', 'application/json; charset=utf-8')
-                self.send_header('Content-Length', str(len(response)))
-                self.end_headers()
-                self.wfile.write(response)
             except ValueError as e:
-                self.send_error(400)
-                response = json.dumps({"error": str(e)}).encode()
-                self.send_header('Content-Length', str(len(response)))
-                self.end_headers()
-                self.wfile.write(response)
+                self.send_json(400, {"error": str(e)})
+            except CurrencyAlreadyExistsError as e:
+                self.send_json(409, {"error": str(e)})
+
+            self.send_json(202, currency_view)
+
+        def send_json(self, status: int, data: dict | list[dict]):
+            response = json.dumps(data).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(response)))
+            self.end_headers()
+            self.wfile.write(response)
 
     return ServerHandler
