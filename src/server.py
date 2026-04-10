@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 from src.database.models import Currency
 from src.dto.currency_post_dto import CurrencyPost
 from src.router import Router
-from src.service import Service, CurrencyAlreadyExistsError
+from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError
 
 router = Router()
 
@@ -69,10 +69,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             return result
 
         def not_founded(self):
-            self.send_response(404)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write('Not founded.'.encode())
+            self.send_json(404, {"error": "Страница не найдена."})
 
         def do_GET(self):
             self._handle_method('GET')
@@ -98,9 +95,16 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
         @router.route(method='GET', path='/currency/{currency_name}')
         def get_currency(self, currency_name: str):
-            currency = self.service.get_currency(currency_name)
-            currency_view = asdict(currency)
-            self.send_json(202, currency_view)
+            try:
+                currency = self.service.get_currency(currency_name)
+                currency_view = asdict(currency)
+                self.send_json(202, currency_view)
+            except CurrencyNotFoundError as e:
+                self.send_json(404, {"error": e})
+
+        @router.route(method='GET', path='/currency')
+        def get_currency_missing_code(self):
+            self.send_json(400, {"error": "Код валюты не написан в адресе."})
 
         @router.route(method='POST', path='/currencies')
         def add_currency(self):

@@ -1,6 +1,7 @@
 import sqlite3
+from decimal import Decimal
 
-from src.database.models import Currency
+from src.database.models import Currency, ExchangeRates
 
 
 class Database:
@@ -9,7 +10,7 @@ class Database:
             self.connection = sqlite3.connect(path)
             self.connection.row_factory = sqlite3.Row
             self.cursor = self.connection.cursor()
-        except:
+        except Exception:
             pass
 
     def get_all_currencies(self) -> list[Currency]:
@@ -36,10 +37,30 @@ class Database:
         except sqlite3.IntegrityError:
             raise sqlite3.IntegrityError("Все коды должны быть уникальны!")
 
-    def _row_to_currency(self, row: sqlite3.Row):
+    def add_exchange_rates(self, base_currency_name: int, target_currency_name: int, rate: Decimal):
+        # query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?);"""
+        # self.cursor.execute(query, (base_currency_id, target_currency_id, rate))
+        # self.connection.commit()
+        pass
+
+    def get_all_exchange_rates(self) -> list[ExchangeRates]:
+        query = """SELECT * FROM exchange_rates;"""
+        exchange_rates: list[ExchangeRates] = [self._row_to_exchange_rate(row) for row in
+                                               self.cursor.execute(query).fetchall()]
+        return exchange_rates
+
+    def _row_to_currency(self, row: sqlite3.Row) -> Currency:
         return Currency(
             id=row["id"],
             code=row["code"],
             full_name=row["full_name"],
             sign=row["sign"]
+        )
+
+    def _row_to_exchange_rate(self, row: sqlite3.Row) -> ExchangeRates:
+        return ExchangeRates(
+            id=row["id"],
+            base_currency_id=row["base_currency_id"],
+            target_currency_id=row["target_currency_id"],
+            rate=row["rate"]
         )
