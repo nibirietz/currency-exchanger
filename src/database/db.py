@@ -1,7 +1,7 @@
 import sqlite3
 from decimal import Decimal
 
-from src.database.models import Currency, ExchangeRates
+from src.dto.currency_dto import CurrencyResponse
 
 
 class Database:
@@ -11,14 +11,15 @@ class Database:
             self.connection.row_factory = sqlite3.Row
             self.cursor = self.connection.cursor()
         except Exception:
-            pass
+            raise Exception("Внутренняя ошибка.")
 
-    def get_all_currencies(self) -> list[Currency]:
+    def get_all_currencies(self) -> list[CurrencyResponse]:
         query = """SELECT * FROM currencies;"""
-        currencies: list[Currency] = [self._row_to_currency(row) for row in self.cursor.execute(query).fetchall()]
+        currencies: list[CurrencyResponse] = [self._row_to_currency(row) for row in
+                                              self.cursor.execute(query).fetchall()]
         return currencies
 
-    def get_currency(self, code: str) -> Currency | None:
+    def get_currency(self, code: str) -> CurrencyResponse | None:
         query = """SELECT * FROM currencies
                    WHERE code = ?;"""
         currency_row = self.cursor.execute(query, [code]).fetchall()
@@ -37,30 +38,35 @@ class Database:
         except sqlite3.IntegrityError:
             raise sqlite3.IntegrityError("Все коды должны быть уникальны!")
 
-    def add_exchange_rates(self, base_currency_name: int, target_currency_name: int, rate: Decimal):
-        # query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?);"""
-        # self.cursor.execute(query, (base_currency_id, target_currency_id, rate))
+    def add_exchange_rates(self, base_currency_id: str, target_currency_id: str, rate: Decimal):
+        # query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
+        #            SELECT currency1.id, currency2.id, ?
+        #            FROM currencies currency1, currencies currency2
+        #            WHERE currency1.full_name = ? AND currency2.full_name = ?
+        #            RETURNING exchange_rates.id, base_currency_id, target_currency_id, rate;"""
+        # self.cursor.execute(query, (rate, base_currency_, target_currency_name))
         # self.connection.commit()
         pass
 
-    def get_all_exchange_rates(self) -> list[ExchangeRates]:
-        query = """SELECT * FROM exchange_rates;"""
-        exchange_rates: list[ExchangeRates] = [self._row_to_exchange_rate(row) for row in
-                                               self.cursor.execute(query).fetchall()]
-        return exchange_rates
+    def get_all_exchange_rates(self) -> list:
+        # query = """SELECT * FROM exchange_rates;"""
+        # exchange_rates: list[ExchangeRates] = [self._row_to_exchange_rate(row) for row in
+        #                                        self.cursor.execute(query).fetchall()]
+        # return exchange_rates
+        pass
 
-    def _row_to_currency(self, row: sqlite3.Row) -> Currency:
-        return Currency(
+    def _row_to_currency_response(self, row: sqlite3.Row) -> CurrencyResponse:
+        return CurrencyResponse(
             id=row["id"],
             code=row["code"],
-            full_name=row["full_name"],
+            name=row["full_name"],
             sign=row["sign"]
         )
 
-    def _row_to_exchange_rate(self, row: sqlite3.Row) -> ExchangeRates:
-        return ExchangeRates(
-            id=row["id"],
-            base_currency_id=row["base_currency_id"],
-            target_currency_id=row["target_currency_id"],
-            rate=row["rate"]
-        )
+    # def _row_to_exchange_rate(self, row: sqlite3.Row) -> ExchangeRates:
+    #     return ExchangeRates(
+    #         id=row["id"],
+    #         base_currency_id=row["base_currency_id"],
+    #         target_currency_id=row["target_currency_id"],
+    #         rate=row["rate"]
+    #     )

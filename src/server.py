@@ -3,8 +3,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 from urllib.parse import urlparse, parse_qs
 
-from src.database.models import Currency
-from src.dto.currency_post_dto import CurrencyPost
+from src.dto.currency_dto import CurrencyPost, CurrencyResponse
 from src.router import Router
 from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError
 
@@ -89,7 +88,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
         @router.route(method='GET', path='/currencies')
         def get_currencies(self):
-            currencies: list[Currency] = self.service.get_all_currencies()
+            currencies: list[CurrencyResponse] = self.service.get_all_currencies()
             currencies_view: list[dict] = [asdict(currency) for currency in currencies]
             self.send_json(202, currencies_view)
 
@@ -119,6 +118,10 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
                 self.send_json(409, {"error": str(e)})
 
             self.send_json(202, currency_view)
+
+        @router.route(method="GET", path="exchangeRate")
+        def get_all_exchange_rates(self):
+            pass
 
         def send_json(self, status: int, data: dict | list[dict]):
             response = json.dumps(data).encode("utf-8")

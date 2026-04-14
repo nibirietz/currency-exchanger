@@ -3,16 +3,11 @@ from decimal import Decimal
 
 
 @dataclass
-class Currency:
-    id: int
-    code: str
-    full_name: str
-    sign: str
+class ExchangeRate:
+    rate: Decimal
 
 
 @dataclass
-class ExchangeRates:
-    id: int
+class ExchangeRatePost(ExchangeRate):
     base_currency_id: int
     target_currency_id: int
-    rate: Decimal
