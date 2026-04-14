@@ -27,7 +27,7 @@ class ExchangeRateMapper:
             id=row["id"],
             base_currency=base_currency,
             target_currency=target_currency,
-            rate=Decimal(row["rate"])
+            rate=Decimal(str(row["rate"]))
         )
 
         return exchange_rate
@@ -36,8 +36,8 @@ class ExchangeRateMapper:
     def response_to_view(response: ExchangeRateResponse) -> dict:
         view = {
             "id": response.id,
-            "base_currency": asdict(response.base_currency),
-            "target_currency": asdict(response.target_currency),
+            "baseCurrency": asdict(response.base_currency),
+            "targetCurrency": asdict(response.target_currency),
             "rate": str(response.rate)
         }
 

@@ -8,3 +8,7 @@ class CurrencyNotFoundError(Exception):
 
 class ExchangeRateNotFoundError(Exception):
     pass
+
+
+class ExchangeRateAlreadyExistsError(Exception):
+    pass

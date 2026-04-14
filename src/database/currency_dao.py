@@ -4,7 +4,6 @@ from typing import Optional
 from src.database.base_dao import BaseDAO
 from src.dto.currency_dto import CurrencyResponse
 from src.mappers.currency_mapper import CurrencyMapper
-from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 
 SELECT_CURRENCY_QUERY = """SELECT id, full_name, code, sign FROM currencies"""
 
@@ -22,7 +21,7 @@ class CurrencyDAO(BaseDAO):
     def get_currency(self, code: str) -> Optional[CurrencyResponse]:
         query = f"""{SELECT_CURRENCY_QUERY}
                    WHERE code = ?;"""
-        currency_row = self._execute_one(query, code)
+        currency_row = self._execute_one(query, (code,))
         if not currency_row:
             return None
 
@@ -33,6 +32,7 @@ class CurrencyDAO(BaseDAO):
     def add_currency(self, code: str, name: str, sign: str):
         query = """INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?);"""
         try:
-            self._execute(query, (code, name, sign))
+            last_row_id = self._execute_returning_last_row_id(query, (code, name, sign))
+            return last_row_id
         except sqlite3.IntegrityError:
             raise sqlite3.IntegrityError("Все коды должны быть уникальны!")

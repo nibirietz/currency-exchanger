@@ -1,13 +1,12 @@
 from http.server import HTTPServer
 
-from src.config import Config
 from src.database.create_database import create_db
 from src.database.currency_dao import CurrencyDAO
-from src.database.db import ExchangeRateDAO
+from src.database.exchange_rate_dao import ExchangeRateDAO
 from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.server import create_handler
-from src.service import Service
+from src.services.service import Service
 
 
 def main():

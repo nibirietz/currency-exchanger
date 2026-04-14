@@ -15,8 +15,8 @@ class CurrencyRequest(Currency):
         print(self.code)
         if len(self.code) != 3 or not self.code.isalpha():
             raise ValueError("Код должен состоять из 3 символов.")
-        if not (1 <= len(self.sign) <= 2) or not self.sign.isascii():
-            raise ValueError("Знак должен состоять из 1 или 2 символов.")
+        if not (1 <= len(self.sign) <= 3):
+            raise ValueError("Знак должен состоять из 1-2 символов.")
 
 
 @dataclass

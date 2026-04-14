@@ -32,7 +32,7 @@ class ExchangeRateDAO(BaseDAO):
     def get_exchange_rate_by_id(self, exchange_rate_id: int) -> ExchangeRateResponse:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
                    WHERE exchange_rates.id = ?;"""
-        exchange_rate_row = self._execute_one(query, exchange_rate_id)
+        exchange_rate_row = self._execute_one(query, (exchange_rate_id,))
         return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
 
     def add_exchange_rates(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
