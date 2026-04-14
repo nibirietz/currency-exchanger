@@ -2,7 +2,8 @@ import sqlite3
 from decimal import Decimal
 
 from src.database.db import Database
-from src.dto.currency_dto import CurrencyPost, CurrencyResponse
+from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
+from src.dto.exchange_rate_dto import ExchangeRateResponse
 
 
 class Service:
@@ -19,17 +20,18 @@ class Service:
             raise CurrencyNotFoundError("Валюта не найдена.")
         return currency
 
-    def add_currency(self, currency_post: CurrencyPost):
+    def add_currency(self, currency_post: CurrencyRequest):
         try:
             self.database.add_currency(currency_post.code, currency_post.name, currency_post.sign)
         except sqlite3.IntegrityError:
             raise CurrencyAlreadyExistsError(f"Валюта с кодом {currency_post.code} существует.")
 
-    # def add_exchange_rate(self, base_currency_name: str, target_currency_name: str, rate: Decimal):
-    #     self.database.add_exchange_rates(base_currency_name, target_currency_name, rate)
+    def add_exchange_rate(self, base_currency_name: str, target_currency_name: str, rate: Decimal):
+        inserted_id = self.database.add_exchange_rates(base_currency_name, target_currency_name, rate)
 
-    # def get_all_exchange_rates(self) -> ExchangeRates:
-    #     return
+    def get_all_exchange_rates(self) -> list[ExchangeRateResponse]:
+        exchange_rates: list[ExchangeRateResponse] = self.database.get_all_exchange_rates()
+        return exchange_rates
 
 
 class CurrencyAlreadyExistsError(Exception):

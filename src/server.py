@@ -3,7 +3,8 @@ from http.server import BaseHTTPRequestHandler
 import json
 from urllib.parse import urlparse, parse_qs
 
-from src.dto.currency_dto import CurrencyPost, CurrencyResponse
+from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
+from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
 from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError
 
@@ -109,8 +110,8 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         def add_currency(self):
             currency_view = self.parse_body_to_dict()
             try:
-                currency_post = CurrencyPost(name=currency_view["name"], code=currency_view["code"],
-                                             sign=currency_view["sign"])
+                currency_post = CurrencyRequest(name=currency_view["name"], code=currency_view["code"],
+                                                sign=currency_view["sign"])
                 self.service.add_currency(currency_post)
             except ValueError as e:
                 self.send_json(400, {"error": str(e)})
@@ -119,9 +120,12 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
             self.send_json(202, currency_view)
 
-        @router.route(method="GET", path="exchangeRate")
+        @router.route(method="GET", path="/exchangeRate")
         def get_all_exchange_rates(self):
-            pass
+            exchange_rates = self.service.get_all_exchange_rates()
+            exchange_rates_view = [ExchangeRateMapper.response_to_view(exchange_rate) for exchange_rate in
+                                   exchange_rates]
+            self.send_json(202, exchange_rates_view)
 
         def send_json(self, status: int, data: dict | list[dict]):
             response = json.dumps(data).encode("utf-8")

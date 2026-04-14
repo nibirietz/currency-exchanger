@@ -9,7 +9,7 @@ class Currency:
 
 
 @dataclass
-class CurrencyPost(Currency):
+class CurrencyRequest(Currency):
     def __post_init__(self):
         self.code = self.code.upper().strip()
         print(self.code)
