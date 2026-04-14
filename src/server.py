@@ -4,6 +4,7 @@ import json
 from urllib.parse import urlparse, parse_qs
 
 from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
+from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
 from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError
@@ -75,13 +76,20 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             self._handle_method('POST')
             print(self.path)
 
+        def send_json(self, status: int, data: dict | list[dict]):
+            response = json.dumps(data).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(response)))
+            self.end_headers()
+            self.wfile.write(response)
+
         @router.route(method='GET', path='/')
         def get_root(self):
             try:
                 self.send_json(202, {"message": "Это главная страница."})
             except NotImplemented:
-                self.send_response(400)
-                self.wfile.write(json.dumps('Not Implemented').encode())
+                self.send_json(404, {"error": "Страница не найдена."})
 
         @router.route(method='GET', path='/currencies')
         def get_currencies(self):
@@ -106,8 +114,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         def add_currency(self):
             currency_view = self.parse_body_to_dict()
             try:
-                currency_post = CurrencyRequest(name=currency_view["name"], code=currency_view["code"],
-                                                sign=currency_view["sign"])
+                currency_post = CurrencyMapper.dict_to_request(currency_view)
                 self.service.add_currency(currency_post)
             except ValueError as e:
                 self.send_json(400, {"error": str(e)})
@@ -139,14 +146,9 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         @router.route(method="POST", path="/exchangeRates")
         def add_exchange_rate(self):
             exchange_rate_request = ExchangeRateMapper.dict_to_request(self.parse_body_to_dict())
-            # self.send_json(202, {"message": exchange_rate_request.base_currency_code})
-
-        def send_json(self, status: int, data: dict | list[dict]):
-            response = json.dumps(data).encode("utf-8")
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(response)))
-            self.end_headers()
-            self.wfile.write(response)
+            exchange_rate_response = self.service.add_exchange_rate(exchange_rate_request.base_currency_code,
+                                                                    exchange_rate_request.target_currency_code,
+                                                                    exchange_rate_request.rate)
+            print(ExchangeRateMapper.response_to_view(exchange_rate_response))
 
     return ServerHandler

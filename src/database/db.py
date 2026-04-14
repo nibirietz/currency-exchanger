@@ -4,6 +4,7 @@ from typing import Optional
 
 from src.dto.currency_dto import CurrencyResponse
 from src.dto.exchange_rate_dto import ExchangeRateResponse
+from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 
 SELECT_EXCHANGE_RATE_QUERY = """
@@ -32,10 +33,11 @@ class Database:
         except Exception:
             raise Exception("Внутренняя ошибка.")
         self.exchange_rates_mapper = ExchangeRateMapper()
+        self.currency_rates_mapper = CurrencyMapper()
 
     def get_all_currencies(self) -> list[CurrencyResponse]:
         query = """SELECT * FROM currencies;"""
-        currencies: list[CurrencyResponse] = [self._row_to_currency_response(row) for row in
+        currencies: list[CurrencyResponse] = [self.currency_rates_mapper.row_to_response(row) for row in
                                               self.cursor.execute(query).fetchall()]
         return currencies
 
@@ -46,7 +48,7 @@ class Database:
         if not currency_row:
             return None
 
-        currency = self._row_to_currency_response(currency_row)
+        currency = self.currency_rates_mapper.row_to_response(currency_row)
 
         return currency
 
@@ -62,38 +64,23 @@ class Database:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
                    WHERE exchange_rates.id = ?;"""
         exchange_rate_row = self.cursor.execute(query, [exchange_rate_id]).fetchone()
+        return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
 
-    def add_exchange_rates(self, base_currency_id: str, target_currency_id: str, rate: Decimal):
-        # query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
-        #            SELECT currency1.id, currency2.id, ?
-        #            FROM currencies currency1, currencies currency2
-        #            WHERE currency1.full_name = ? AND currency2.full_name = ?
-        #            RETURNING exchange_rates.id, base_currency_id, target_currency_id, rate;"""
-        # self.cursor.execute(query, (rate, base_currency_, target_currency_name))
-        # self.connection.commit()
-        pass
+    def add_exchange_rates(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
+        query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
+                   SELECT base_currency.id, target_currency.id, ?
+                   FROM currencies base_currency CROSS JOIN currencies target_currency
+                   WHERE base_currency.code = ? AND target_currency.code = ?;"""
+        self.cursor.execute(query, (str(rate), base_currency_code, target_currency_code))
+        self.connection.commit()
+
+        return self.cursor.lastrowid
 
     def get_all_exchange_rates(self) -> list:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY};"""
         exchange_rates = [self.exchange_rates_mapper.row_to_response(row) for row in
                           self.cursor.execute(query).fetchall()]
         return exchange_rates
-
-    def _row_to_currency_response(self, row: sqlite3.Row) -> CurrencyResponse:
-        return CurrencyResponse(
-            id=row["id"],
-            code=row["code"],
-            name=row["full_name"],
-            sign=row["sign"]
-        )
-
-    # def _row_to_exchange_rate(self, row: sqlite3.Row) -> ExchangeRates:
-    #     return ExchangeRates(
-    #         id=row["id"],
-    #         base_currency_id=row["base_currency_id"],
-    #         target_currency_id=row["target_currency_id"],
-    #         rate=row["rate"]
-    #     )
 
     def get_exchange_rate(self, base_code: str, target_code: str) -> Optional[ExchangeRateResponse]:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
