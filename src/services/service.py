@@ -37,7 +37,7 @@ class Service:
         try:
             inserted_id = self.exchange_rate_dao.add_exchange_rates(base_currency_name, target_currency_name, rate)
             if inserted_id == 0:
-                raise CurrencyNotFoundError("Одна(или обе) валюта из валютной пары не существует. ")
+                raise CurrencyNotFoundError("Одна(или обе) валюта из валютной пары не существует.")
         except sqlite3.IntegrityError:
             raise ExchangeRateAlreadyExistsError("Валютная пара уже существует.")
 
@@ -48,6 +48,14 @@ class Service:
         return exchange_rates
 
     def get_exchange_rate(self, base_code: str, target_code: str) -> ExchangeRateResponse:
+        exchange_rate = self.exchange_rate_dao.get_exchange_rate(base_code, target_code)
+        if not exchange_rate:
+            raise ExchangeRateNotFoundError("Обменный курс не найден.")
+
+        return exchange_rate
+
+    def patch_exchange_rate(self, base_code: str, target_code: str, rate: Decimal) -> ExchangeRateResponse:
+        self.exchange_rate_dao.patch_exchange_rate(base_code, target_code, rate)
         exchange_rate = self.exchange_rate_dao.get_exchange_rate(base_code, target_code)
         if not exchange_rate:
             raise ExchangeRateNotFoundError("Обменный курс не найден.")

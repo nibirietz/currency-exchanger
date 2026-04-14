@@ -1,11 +1,8 @@
-import sqlite3
 from decimal import Decimal
 from typing import Optional
-
 from src.database.base_dao import BaseDAO
-from src.dto.currency_dto import CurrencyResponse
 from src.dto.exchange_rate_dto import ExchangeRateResponse
-from src.mappers.currency_mapper import CurrencyMapper
+from src.exceptions import ExchangeRateNotFoundError
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 
 SELECT_EXCHANGE_RATE_QUERY = """
@@ -59,3 +56,13 @@ class ExchangeRateDAO(BaseDAO):
             return None
 
         return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
+
+    def patch_exchange_rate(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
+        query = """UPDATE exchange_rates
+                   SET rate = ?
+                   WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)
+                   AND target_currency_id = (SELECT id FROM currencies WHERE code = ?);"""
+        rowcount = self._execute_and_return_rowcount(query, (str(rate), base_currency_code, target_currency_code))
+
+        if rowcount == 0:
+            raise ExchangeRateNotFoundError("Обменная пара не найдена.")

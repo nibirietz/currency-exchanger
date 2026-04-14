@@ -1,15 +1,15 @@
+import json
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler
-import json
 from urllib.parse import urlparse, parse_qs
 
 from src.dto.currency_dto import CurrencyResponse
+from src.exceptions import CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError, \
+    ExchangeRateAlreadyExistsError
 from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
 from src.services.service import Service
-from src.exceptions import CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError, \
-    ExchangeRateAlreadyExistsError
 
 router = Router()
 
@@ -48,16 +48,20 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             }
 
         def _handle_method(self, method: str):
-            request_data = self._request_parse_request()
-            handler, path_parameters = self._find_route(method, request_data['path'])
-            if handler is None:
-                self.not_founded()
-                return
+            try:
+                request_data = self._request_parse_request()
+                handler, path_parameters = self._find_route(method, request_data['path'])
+                if handler is None:
+                    self.not_found()
+                    return
 
-            if len(request_data['query_parameters']) != 0:
-                handler(self, **path_parameters, **request_data['query_parameters'])
-            else:
-                handler(self, **path_parameters)
+                if len(request_data['query_parameters']) != 0:
+                    handler(self, **path_parameters, **request_data['query_parameters'])
+                else:
+                    handler(self, **path_parameters)
+            except Exception as e:
+                self.send_json(500, {"message": "Внутренняя ошибка сервера."})
+                print(str(e))
 
         def parse_body_to_dict(self) -> dict:
             content_length = int(self.headers['Content-Length'])
@@ -67,15 +71,19 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
             return result
 
-        def not_founded(self):
+        def not_found(self):
             self.send_json(404, {"error": "Страница не найдена."})
 
         def do_GET(self):
-            self._handle_method('GET')
+            self._handle_method("GET")
             print(self.path)
 
         def do_POST(self):
-            self._handle_method('POST')
+            self._handle_method("POST")
+            print(self.path)
+
+        def do_PATCH(self):
+            self._handle_method("PATCH")
             print(self.path)
 
         def send_json(self, status: int, data: dict | list[dict]):
@@ -88,10 +96,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
         @router.route(method='GET', path='/')
         def get_root(self):
-            try:
-                self.send_json(202, {"message": "Это главная страница."})
-            except NotImplemented:
-                self.send_json(404, {"error": "Страница не найдена."})
+            self.send_json(200, {"message": "Это главная страница."})
 
         @router.route(method='GET', path='/currencies')
         def get_currencies(self):
@@ -115,7 +120,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
         @router.route(method='POST', path='/currencies')
         def add_currency(self):
             currency_view = self.parse_body_to_dict()
-            print(currency_view)
+
             try:
                 currency_post = CurrencyMapper.dict_to_request(currency_view)
                 currency_response = self.service.add_currency(currency_post)
@@ -160,6 +165,25 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             except ExchangeRateAlreadyExistsError as e:
                 self.send_json(409, {"message": str(e)})
             except CurrencyNotFoundError as e:
+                self.send_json(404, {"message": str(e)})
+
+        @router.route(method="PATCH", path="/exchangeRate/{codes}")
+        def patch_exchange_rate(self, codes: str):
+            body_dict = self.parse_body_to_dict()
+            if not "rate" in body_dict:
+                self.send_json(400, {"message": "Отсутствует необходимое поле."})
+                return
+            if len(codes) != 6:
+                self.send_json(404, {"message": "Обменный курс не найден."})
+                return
+            base_code, target_code = codes[:3], codes[3:]
+
+            rate = body_dict["rate"]
+            try:
+                exchange_rate = self.service.patch_exchange_rate(base_code, target_code, rate)
+                exchange_rate_view = ExchangeRateMapper.response_to_view(exchange_rate)
+                self.send_json(200, exchange_rate_view)
+            except ExchangeRateNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
 
     return ServerHandler

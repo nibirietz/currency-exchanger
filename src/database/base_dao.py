@@ -32,3 +32,9 @@ class BaseDAO(ABC):
                 raise RuntimeError("Вставка не удалась.")
             else:
                 return cursor.lastrowid
+
+    @staticmethod
+    def _execute_and_return_rowcount(query: str, params: tuple | None = None) -> int:
+        with db_session() as cursor:
+            cursor.execute(query, params or ())
+            return cursor.rowcount
