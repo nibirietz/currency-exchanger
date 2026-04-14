@@ -7,7 +7,8 @@ from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
 from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
-from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError
+from src.service import Service
+from src.exceptions import CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError
 
 router = Router()
 
