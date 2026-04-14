@@ -61,11 +61,7 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             raw_body = self.rfile.read(content_length)
             raw_dict = parse_qs(raw_body)
             result = {key.decode(): value[0].decode() for key, value in raw_dict.items()}
-            for key, value in result.items():
-                if value.isdigit():
-                    result[key] = float(value) if float(value) != int(value) else int(value)
 
-            print(result)
             return result
 
         def not_founded(self):
@@ -140,8 +136,10 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
             except ExchangeRateNotFoundError as e:
                 self.send_json(404, {"error": str(e)})
 
-        def add_exchange_rates(self):
-            pass
+        @router.route(method="POST", path="/exchangeRates")
+        def add_exchange_rate(self):
+            exchange_rate_request = ExchangeRateMapper.dict_to_request(self.parse_body_to_dict())
+            # self.send_json(202, {"message": exchange_rate_request.base_currency_code})
 
         def send_json(self, status: int, data: dict | list[dict]):
             response = json.dumps(data).encode("utf-8")

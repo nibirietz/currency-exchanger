@@ -11,8 +11,8 @@ class ExchangeRate:
 
 @dataclass
 class ExchangeRateRequest(ExchangeRate):
-    base_currency_id: int
-    target_currency_id: int
+    base_currency_code: str
+    target_currency_code: str
 
 
 @dataclass

@@ -3,7 +3,7 @@ from dataclasses import asdict
 from decimal import Decimal
 
 from src.dto.currency_dto import CurrencyResponse
-from src.dto.exchange_rate_dto import ExchangeRateResponse
+from src.dto.exchange_rate_dto import ExchangeRateResponse, ExchangeRateRequest
 
 
 class ExchangeRateMapper:
@@ -42,3 +42,13 @@ class ExchangeRateMapper:
         }
 
         return view
+
+    @staticmethod
+    def dict_to_request(exchange_rate: dict) -> ExchangeRateRequest:
+        exchange_rate_request = ExchangeRateRequest(
+            base_currency_code=exchange_rate["baseCurrencyCode"],
+            target_currency_code=exchange_rate["targetCurrencyCode"],
+            rate=Decimal(exchange_rate["rate"])
+        )
+
+        return exchange_rate_request
