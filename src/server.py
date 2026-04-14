@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qs
 from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
-from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError
+from src.service import Service, CurrencyAlreadyExistsError, CurrencyNotFoundError, ExchangeRateNotFoundError
 
 router = Router()
 
@@ -120,12 +120,28 @@ def create_handler(injection_service: Service) -> BaseHTTPRequestHandler:
 
             self.send_json(202, currency_view)
 
-        @router.route(method="GET", path="/exchangeRate")
+        @router.route(method="GET", path="/exchangeRates")
         def get_all_exchange_rates(self):
             exchange_rates = self.service.get_all_exchange_rates()
             exchange_rates_view = [ExchangeRateMapper.response_to_view(exchange_rate) for exchange_rate in
                                    exchange_rates]
             self.send_json(202, exchange_rates_view)
+
+        @router.route(method="GET", path="/exchangeRate/{codes}")
+        def get_exchange_rate(self, codes: str):
+            if len(codes) != 6 or not codes.isascii():
+                self.send_json(404, {"error": "Обменный курс не найден."})
+                return
+            base_code, target_code = codes[:3], codes[3:]
+
+            try:
+                exchange_rate = self.service.get_exchange_rate(base_code, target_code)
+                self.send_json(202, ExchangeRateMapper.response_to_view(exchange_rate))
+            except ExchangeRateNotFoundError as e:
+                self.send_json(404, {"error": str(e)})
+
+        def add_exchange_rates(self):
+            pass
 
         def send_json(self, status: int, data: dict | list[dict]):
             response = json.dumps(data).encode("utf-8")

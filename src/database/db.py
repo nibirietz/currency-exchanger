@@ -1,5 +1,6 @@
 import sqlite3
 from decimal import Decimal
+from typing import Optional
 
 from src.dto.currency_dto import CurrencyResponse
 from src.dto.exchange_rate_dto import ExchangeRateResponse
@@ -38,7 +39,7 @@ class Database:
                                               self.cursor.execute(query).fetchall()]
         return currencies
 
-    def get_currency(self, code: str) -> CurrencyResponse | None:
+    def get_currency(self, code: str) -> Optional[CurrencyResponse]:
         query = """SELECT * FROM currencies
                    WHERE code = ?;"""
         currency_row = self.cursor.execute(query, [code]).fetchone()
@@ -74,7 +75,8 @@ class Database:
 
     def get_all_exchange_rates(self) -> list:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY};"""
-        exchange_rates = [self.exchange_rates_mapper.row_to_response(row) for row in self.cursor.execute(query)]
+        exchange_rates = [self.exchange_rates_mapper.row_to_response(row) for row in
+                          self.cursor.execute(query).fetchall()]
         return exchange_rates
 
     def _row_to_currency_response(self, row: sqlite3.Row) -> CurrencyResponse:
@@ -92,3 +94,12 @@ class Database:
     #         target_currency_id=row["target_currency_id"],
     #         rate=row["rate"]
     #     )
+
+    def get_exchange_rate(self, base_code: str, target_code: str) -> Optional[ExchangeRateResponse]:
+        query = f"""{SELECT_EXCHANGE_RATE_QUERY}
+                    WHERE base_currency_code = ? AND target_currency_code = ?;"""
+        exchange_rate_row = self.cursor.execute(query, (base_code, target_code)).fetchone()
+        if not exchange_rate_row:
+            return None
+
+        return self.exchange_rates_mapper.row_to_response(exchange_rate_row)

@@ -33,10 +33,21 @@ class Service:
         exchange_rates: list[ExchangeRateResponse] = self.database.get_all_exchange_rates()
         return exchange_rates
 
+    def get_exchange_rate(self, base_code: str, target_code: str) -> ExchangeRateResponse:
+        exchange_rate = self.database.get_exchange_rate(base_code, target_code)
+        if not exchange_rate:
+            raise ExchangeRateNotFoundError("Обменный курс не найден.")
+
+        return exchange_rate
+
 
 class CurrencyAlreadyExistsError(Exception):
     pass
 
 
 class CurrencyNotFoundError(Exception):
+    pass
+
+
+class ExchangeRateNotFoundError(Exception):
     pass
