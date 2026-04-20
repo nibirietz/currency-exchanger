@@ -24,14 +24,11 @@ JOIN currencies target_currency ON exchange_rates.target_currency_id = target_cu
 
 
 class ExchangeRateDAO(BaseDAO):
-    def __init__(self, exchange_rates_mapper: ExchangeRateMapper):
-        self.exchange_rates_mapper = exchange_rates_mapper
-
     def get_exchange_rate_by_id(self, exchange_rate_id: int) -> ExchangeRateResponse:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
                    WHERE exchange_rates.id = ?;"""
         exchange_rate_row = self._execute_one(query, (exchange_rate_id,))
-        return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
+        return ExchangeRateMapper.row_to_response(exchange_rate_row)
 
     def add_exchange_rates(
         self, base_currency_code: str, target_currency_code: str, rate: Decimal
@@ -49,8 +46,7 @@ class ExchangeRateDAO(BaseDAO):
     def get_all_exchange_rates(self) -> list:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY};"""
         exchange_rates = [
-            self.exchange_rates_mapper.row_to_response(row)
-            for row in self._execute_all(query)
+            ExchangeRateMapper.row_to_response(row) for row in self._execute_all(query)
         ]
         return exchange_rates
 
@@ -63,7 +59,7 @@ class ExchangeRateDAO(BaseDAO):
         if not exchange_rate_row:
             return None
 
-        return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
+        return ExchangeRateMapper.row_to_response(exchange_rate_row)
 
     def patch_exchange_rate(
         self, base_currency_code: str, target_currency_code: str, rate: Decimal

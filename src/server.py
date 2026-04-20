@@ -22,7 +22,7 @@ router = Router()
 def create_handler(
     injected_currency_service: CurrencyService,
     injected_exchange_rate_service: ExchangeRateService,
-) -> BaseHTTPRequestHandler:
+) -> type[BaseHTTPRequestHandler]:
     class ServerHandler(BaseHTTPRequestHandler):
         currency_service = injected_currency_service
         exchange_rate_service = injected_exchange_rate_service
@@ -213,4 +213,4 @@ def create_handler(
             except ExchangeRateNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
 
-    return ServerHandler  # basedpyright:ignore[invalid-return-type]
+    return ServerHandler
