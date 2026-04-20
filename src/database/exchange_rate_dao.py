@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Optional
+
 from src.database.base_dao import BaseDAO
 from src.dto.exchange_rate_dto import ExchangeRateResponse
 from src.exceptions import ExchangeRateNotFoundError
@@ -16,7 +17,7 @@ SELECT exchange_rates.id,
        target_currency.code AS target_currency_code,
        target_currency.sign AS target_currency_sign,
        exchange_rates.rate
-FROM exchange_rates 
+FROM exchange_rates
 JOIN currencies base_currency ON exchange_rates.base_currency_id = base_currency.id
 JOIN currencies target_currency ON exchange_rates.target_currency_id = target_currency.id
 """
@@ -32,23 +33,30 @@ class ExchangeRateDAO(BaseDAO):
         exchange_rate_row = self._execute_one(query, (exchange_rate_id,))
         return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
 
-    def add_exchange_rates(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
+    def add_exchange_rates(
+        self, base_currency_code: str, target_currency_code: str, rate: Decimal
+    ):
         query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
                    SELECT base_currency.id, target_currency.id, ?
                    FROM currencies base_currency CROSS JOIN currencies target_currency
                    WHERE base_currency.code = ? AND target_currency.code = ?;"""
-        last_row_id = self._execute_returning_last_row_id(query,
-                                                          (str(rate), base_currency_code, target_currency_code))
+        last_row_id = self._execute_returning_last_row_id(
+            query, (str(rate), base_currency_code, target_currency_code)
+        )
 
         return last_row_id
 
     def get_all_exchange_rates(self) -> list:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY};"""
-        exchange_rates = [self.exchange_rates_mapper.row_to_response(row) for row in
-                          self._execute_all(query)]
+        exchange_rates = [
+            self.exchange_rates_mapper.row_to_response(row)
+            for row in self._execute_all(query)
+        ]
         return exchange_rates
 
-    def get_exchange_rate(self, base_code: str, target_code: str) -> Optional[ExchangeRateResponse]:
+    def get_exchange_rate(
+        self, base_code: str, target_code: str
+    ) -> Optional[ExchangeRateResponse]:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
                     WHERE base_currency_code = ? AND target_currency_code = ?;"""
         exchange_rate_row = self._execute_one(query, (base_code, target_code))
@@ -57,12 +65,16 @@ class ExchangeRateDAO(BaseDAO):
 
         return self.exchange_rates_mapper.row_to_response(exchange_rate_row)
 
-    def patch_exchange_rate(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
+    def patch_exchange_rate(
+        self, base_currency_code: str, target_currency_code: str, rate: Decimal
+    ):
         query = """UPDATE exchange_rates
                    SET rate = ?
                    WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)
                    AND target_currency_id = (SELECT id FROM currencies WHERE code = ?);"""
-        rowcount = self._execute_and_return_rowcount(query, (str(rate), base_currency_code, target_currency_code))
+        rowcount = self._execute_and_return_rowcount(
+            query, (str(rate), base_currency_code, target_currency_code)
+        )
 
         if rowcount == 0:
             raise ExchangeRateNotFoundError("Обменная пара не найдена.")

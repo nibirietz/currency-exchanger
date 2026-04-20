@@ -113,7 +113,9 @@ def test_create_currency_without_sign_returns_400(http, base_url):
     assert data["message"]
 
 
-def test_create_currency_with_duplicate_code_returns_409(http, base_url, ensure_currency):
+def test_create_currency_with_duplicate_code_returns_409(
+    http, base_url, ensure_currency
+):
     ensure_currency("JPY", "Japanese yen", "¥")
 
     response = http.post(
