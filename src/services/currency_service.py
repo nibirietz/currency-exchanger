@@ -25,11 +25,7 @@ class CurrencyService:
 
     def add_currency(self, currency_post: CurrencyRequest) -> CurrencyResponse:
         try:
-            last_row_id = self.currency_dao.add_currency(
-                currency_post.code, currency_post.name, currency_post.sign
-            )
+            last_row_id = self.currency_dao.add_currency(currency_post.code, currency_post.name, currency_post.sign)
             return CurrencyMapper.request_to_response(currency_post, last_row_id)
         except sqlite3.IntegrityError:
-            raise CurrencyAlreadyExistsError(
-                f"Валюта с кодом {currency_post.code} существует."
-            )
+            raise CurrencyAlreadyExistsError(f"Валюта с кодом {currency_post.code} существует.")

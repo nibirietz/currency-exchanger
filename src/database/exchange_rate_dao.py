@@ -30,9 +30,7 @@ class ExchangeRateDAO(BaseDAO):
         exchange_rate_row = self._execute_one(query, (exchange_rate_id,))
         return ExchangeRateMapper.row_to_response(exchange_rate_row)
 
-    def add_exchange_rates(
-        self, base_currency_code: str, target_currency_code: str, rate: Decimal
-    ):
+    def add_exchange_rates(self, base_currency_code: str, target_currency_code: str, rate: Decimal) -> int:
         query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
                    SELECT base_currency.id, target_currency.id, ?
                    FROM currencies base_currency CROSS JOIN currencies target_currency
@@ -50,9 +48,7 @@ class ExchangeRateDAO(BaseDAO):
         ]
         return exchange_rates
 
-    def get_exchange_rate(
-        self, base_code: str, target_code: str
-    ) -> Optional[ExchangeRateResponse]:
+    def get_exchange_rate(self, base_code: str, target_code: str) -> Optional[ExchangeRateResponse]:
         query = f"""{SELECT_EXCHANGE_RATE_QUERY}
                     WHERE base_currency_code = ? AND target_currency_code = ?;"""
         exchange_rate_row = self._execute_one(query, (base_code, target_code))
@@ -61,9 +57,7 @@ class ExchangeRateDAO(BaseDAO):
 
         return ExchangeRateMapper.row_to_response(exchange_rate_row)
 
-    def patch_exchange_rate(
-        self, base_currency_code: str, target_currency_code: str, rate: Decimal
-    ):
+    def patch_exchange_rate(self, base_currency_code: str, target_currency_code: str, rate: Decimal):
         query = """UPDATE exchange_rates
                    SET rate = ?
                    WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)

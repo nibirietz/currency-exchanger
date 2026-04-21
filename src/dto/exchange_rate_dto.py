@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from src.dto.currency_dto import Currency
+from src.dto.currency_dto import Currency, CurrencyResponse
 
 
 @dataclass
@@ -18,5 +18,5 @@ class ExchangeRateRequest(ExchangeRate):
 @dataclass
 class ExchangeRateResponse(ExchangeRate):
     id: int
-    base_currency: Currency
-    target_currency: Currency
+    base_currency: CurrencyResponse
+    target_currency: CurrencyResponse

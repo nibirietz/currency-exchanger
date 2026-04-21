@@ -11,9 +11,7 @@ SELECT_CURRENCY_QUERY = """SELECT id, full_name, code, sign FROM currencies"""
 class CurrencyDAO(BaseDAO):
     def get_all_currencies(self) -> list[CurrencyResponse]:
         query = f"""{SELECT_CURRENCY_QUERY};"""
-        currencies: list[CurrencyResponse] = [
-            CurrencyMapper.row_to_response(row) for row in self._execute_all(query)
-        ]
+        currencies: list[CurrencyResponse] = [CurrencyMapper.row_to_response(row) for row in self._execute_all(query)]
         return currencies
 
     def get_currency(self, code: str) -> Optional[CurrencyResponse]:
