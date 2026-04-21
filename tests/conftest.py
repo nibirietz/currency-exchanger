@@ -19,6 +19,11 @@ def db_path(tmp_path: Path):
 
 
 @pytest.fixture
+def currency_dao(db_path) -> CurrencyDAO:
+    return CurrencyDAO(str(db_path))
+
+
+@pytest.fixture
 def server_url(db_path) -> Generator[str]:
     create_db(str(db_path))
     currency_dao = CurrencyDAO(str(db_path))
