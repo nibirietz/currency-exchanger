@@ -1,5 +1,6 @@
 import json
 from dataclasses import asdict
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
@@ -15,6 +16,7 @@ from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 from src.router import Router
 from src.services.currency_service import CurrencyService
 from src.services.exchange_rate_service import ExchangeRateService
+from src.services.exchange_service import ExchangeService
 
 router = Router()
 
@@ -22,10 +24,12 @@ router = Router()
 def create_handler(
         injected_currency_service: CurrencyService,
         injected_exchange_rate_service: ExchangeRateService,
+        injected_exchange_service: ExchangeService
 ) -> type[BaseHTTPRequestHandler]:
     class ServerHandler(BaseHTTPRequestHandler):
         currency_service = injected_currency_service
         exchange_rate_service = injected_exchange_rate_service
+        exchange_service = injected_exchange_service
 
         def _find_route(self, method: str, path: str):
             if (method, path) in router.routes:
@@ -208,5 +212,14 @@ def create_handler(
                 self.send_json(200, exchange_rate_view)
             except ExchangeRateNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
+
+        @router.route(method="GET", path="/exchange")
+        def get_exchange(self, **kwargs):
+            try:
+                exchange = self.exchange_service.get_exchange(kwargs["from"], kwargs["to"],
+                                                              Decimal(kwargs["amount"]))
+                self.send_json(200, exchange)
+            except KeyError as e:
+                self.send_json(400, {"message": "Не хватает параметра."})
 
     return ServerHandler

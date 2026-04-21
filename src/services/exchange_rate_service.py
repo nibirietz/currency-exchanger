@@ -1,4 +1,5 @@
 import sqlite3
+from dataclasses import asdict
 from decimal import Decimal
 
 from src.database.exchange_rate_dao import ExchangeRateDAO
@@ -8,6 +9,7 @@ from src.exceptions import (
     ExchangeRateAlreadyExistsError,
     ExchangeRateNotFoundError,
 )
+from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 
 
 class ExchangeRateService:

@@ -12,6 +12,7 @@ from src.database.exchange_rate_dao import ExchangeRateDAO
 from src.server import create_handler
 from src.services.currency_service import CurrencyService
 from src.services.exchange_rate_service import ExchangeRateService
+from src.services.exchange_service import ExchangeService
 
 
 @pytest.fixture
@@ -46,7 +47,8 @@ def server_url(db_path) -> Generator[str]:
     currency_service = CurrencyService(currency_dao)
     exchange_rate_dao = ExchangeRateDAO(str(db_path))
     exchange_rate_service = ExchangeRateService(exchange_rate_dao)
-    server_handler = create_handler(currency_service, exchange_rate_service)
+    exchange_service = ExchangeService(currency_dao, exchange_rate_dao)
+    server_handler = create_handler(currency_service, exchange_rate_service, exchange_service)
     server = HTTPServer(("0.0.0.0", 0), server_handler)
     host, port = server.server_address
 
