@@ -6,9 +6,9 @@ from src.config import Config
 
 
 @contextmanager
-def db_session() -> Iterator[sqlite3.Cursor]:
+def db_session(db_path: str) -> Iterator[sqlite3.Cursor]:
     try:
-        connection = sqlite3.connect(Config.DATABASE_PATH)
+        connection = sqlite3.connect(db_path)
         connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
     except sqlite3.Error as e:

@@ -6,26 +6,25 @@ from src.database.db_session import db_session
 
 
 class BaseDAO(ABC):
-    @staticmethod
-    def _execute(query: str, params: Optional[tuple] = None):
-        with db_session() as cursor:
+    def __init__(self, db_path: str):
+        self.db_path = db_path
+
+    def _execute(self, query: str, params: Optional[tuple] = None):
+        with db_session(self.db_path) as cursor:
             cursor.execute(query, params or ())
 
-    @staticmethod
-    def _execute_one(query: str, params: Optional[tuple] = None) -> sqlite3.Row:
-        with db_session() as cursor:
+    def _execute_one(self, query: str, params: Optional[tuple] = None) -> sqlite3.Row:
+        with db_session(self.db_path) as cursor:
             cursor.execute(query, params or ())
             return cursor.fetchone()
 
-    @staticmethod
-    def _execute_all(query: str, params: Optional[tuple] = None) -> list[sqlite3.Row]:
-        with db_session() as cursor:
+    def _execute_all(self, query: str, params: Optional[tuple] = None) -> list[sqlite3.Row]:
+        with db_session(self.db_path) as cursor:
             cursor.execute(query, params or ())
             return cursor.fetchall()
 
-    @staticmethod
-    def _execute_returning_last_row_id(query: str, params: Optional[tuple] = None) -> int:
-        with db_session() as cursor:
+    def _execute_returning_last_row_id(self, query: str, params: Optional[tuple] = None) -> int:
+        with db_session(self.db_path) as cursor:
             cursor.execute(query, params or ())
 
             if cursor.lastrowid is None:
@@ -33,8 +32,7 @@ class BaseDAO(ABC):
             else:
                 return cursor.lastrowid
 
-    @staticmethod
-    def _execute_and_return_rowcount(query: str, params: tuple | None = None) -> int:
-        with db_session() as cursor:
+    def _execute_and_return_rowcount(self, query: str, params: tuple | None = None) -> int:
+        with db_session(self.db_path) as cursor:
             cursor.execute(query, params or ())
             return cursor.rowcount

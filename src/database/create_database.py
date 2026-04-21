@@ -3,8 +3,8 @@ import sqlite3
 from src.config import Config
 
 
-def create_db():
-    connection = sqlite3.connect(Config.DATABASE_PATH)
+def create_db(db_path: str):
+    connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
     currency_query = """CREATE TABLE IF NOT EXISTS currencies(
                              id INTEGER PRIMARY KEY AUTOINCREMENT,
