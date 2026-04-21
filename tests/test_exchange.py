@@ -4,15 +4,15 @@ import pytest
 import requests
 
 
-@pytest.mark.parametrize("frm,to,excepted", [("RUB", "EUR", 10), ("EUR", "RUB", 40)])
+@pytest.mark.parametrize("frm,to,excepted", [("RUB", "EUR", Decimal("0.99")), ("EUR", "RUB", Decimal("2"))])
 def test_get_exchange_returns_200(server_url, exchange_rate_dao, currency_dao, currency_factory,
                                   frm, to, excepted):
     currency1 = currency_factory(code="RUB")
     currency2 = currency_factory(code="EUR")
     currency1_id = currency_dao.add_currency(**currency1)
     currency2_id = currency_dao.add_currency(**currency2)
-    rate = Decimal("0.5")
-    amount = 20
+    rate = Decimal("0.99")
+    amount = 1
     exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency2_id, rate)
 
     payload = {
@@ -26,9 +26,9 @@ def test_get_exchange_returns_200(server_url, exchange_rate_dao, currency_dao, c
     response_data = response.json()
     print(response_data)
 
-    assert response_data["convertedAmount"] == excepted
-    assert response_data["baseCurrency"]["code"] == currency1["code"]
-    assert response_data["targetCurrency"]["code"] == currency2["code"]
+    assert Decimal(response_data["convertedAmount"]) == excepted
+    assert response_data["baseCurrency"]["code"] == frm
+    assert response_data["targetCurrency"]["code"] == to
 
 
 def test_get_exchange_from_a_to_usd_to_b_returns_200(server_url, exchange_rate_dao, currency_dao, currency_factory):
@@ -55,6 +55,6 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(server_url, exchange_rate_d
     response_data = response.json()
     print(response_data)
 
-    assert response_data["convertedAmount"] == 40
+    assert Decimal(response_data["convertedAmount"]) == Decimal("40")
     assert response_data["baseCurrency"]["code"] == currency2["code"]
     assert response_data["targetCurrency"]["code"] == currency3["code"]

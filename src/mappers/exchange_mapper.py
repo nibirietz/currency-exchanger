@@ -24,9 +24,9 @@ class ExchangeMapper:
                 "code": target_currency.code,
                 "sign": target_currency.sign
             },
-            "rate": float(exchange_rate.rate),
-            "amount": float(amount),
-            "convertedAmount": float(converted_amount)
+            "rate": exchange_rate.rate,
+            "amount": amount,
+            "convertedAmount": converted_amount
         }
 
     @staticmethod
@@ -35,7 +35,7 @@ class ExchangeMapper:
         return {
             "baseCurrency": CurrencyMapper.response_to_dict(base_currency),
             "targetCurrency": CurrencyMapper.response_to_dict(target_currency),
-            "rate": float(rate),
-            "amount": float(amount),
-            "convertedAmount": float(converted_amount)
+            "rate": rate,
+            "amount": amount,
+            "convertedAmount": converted_amount
         }

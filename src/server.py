@@ -1,4 +1,4 @@
-import json
+import simplejson as json
 from dataclasses import asdict
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
@@ -104,7 +104,7 @@ def create_handler(
             print(self.path)
 
         def send_json(self, status: int, data: dict | list[dict]):
-            response = json.dumps(data).encode("utf-8")
+            response = json.dumps(data, use_decimal=True).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(response)))

@@ -38,7 +38,7 @@ class ExchangeRateMapper:
             "id": response.id,
             "baseCurrency": asdict(response.base_currency),
             "targetCurrency": asdict(response.target_currency),
-            "rate": float(response.rate)
+            "rate": response.rate
         }
 
         return view
