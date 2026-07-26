@@ -1,8 +1,9 @@
-import simplejson as json
 from dataclasses import asdict
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
+
+import simplejson as json
 
 from src.dto.currency_dto import CurrencyResponse
 from src.exceptions import (

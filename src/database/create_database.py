@@ -1,7 +1,5 @@
 import sqlite3
 
-from src.config import Config
-
 
 def create_db(db_path: str):
     connection = sqlite3.connect(db_path)

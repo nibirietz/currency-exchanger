@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from src.dto.currency_dto import Currency, CurrencyResponse
+from src.dto.currency_dto import CurrencyResponse
 
 
 @dataclass

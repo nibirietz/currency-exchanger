@@ -2,6 +2,7 @@ from decimal import Decimal
 
 import pytest
 import requests
+
 from tests.conftest import assert_currencies_response
 
 
@@ -95,6 +96,24 @@ def test_add_exchange_rate_with_missing_rate_400(server_url, exchange_rate_dao, 
 
     assert "message" in response_data
     exchange_rate = exchange_rate_dao.get_exchange_rate(currency1_id, currency2_id)
+
+    assert exchange_rate is None
+
+
+def test_add_exchange_rate_with_duplicate_code_400(server_url, exchange_rate_dao, currency_factory, currency_dao):
+    currency = currency_factory(code="USD")
+    currency_id = currency_dao.add_currency(**currency)
+    data = {
+        "baseCurrencyCode": currency["code"],
+        "targetCurrencyCode": currency["code"]
+    }
+
+    response = requests.post(f"{server_url}/exchangeRates", data=data, timeout=3)
+    assert response.status_code == 400
+    response_data = response.json()
+
+    assert "message" in response_data
+    exchange_rate = exchange_rate_dao.get_exchange_rate(currency_id, currency_id)
 
     assert exchange_rate is None
 

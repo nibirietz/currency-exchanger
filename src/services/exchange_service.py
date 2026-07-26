@@ -1,12 +1,9 @@
-import json
 from decimal import Decimal
 
 from src.database.currency_dao import CurrencyDAO
 from src.database.exchange_rate_dao import ExchangeRateDAO
-from src.exceptions import ExchangeRateNotFoundError, CurrencyNotFoundError
-from src.mappers.currency_mapper import CurrencyMapper
+from src.exceptions import ExchangeRateNotFoundError
 from src.mappers.exchange_mapper import ExchangeMapper
-from src.mappers.exchange_rate_mapper import ExchangeRateMapper
 
 
 class ExchangeService:
