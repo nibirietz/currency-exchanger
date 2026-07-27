@@ -56,10 +56,7 @@ def create_handler(
             simple_query_params = {}
 
             for key, item in query_parameters.items():
-                if len(item) == 1:
-                    simple_query_params[key] = item[0]
-                else:
-                    simple_query_params[key] = item
+                simple_query_params[key] = item[0]
 
             return {
                 "path": parsed_path.path,
