@@ -16,6 +16,8 @@ class ExchangeRateService:
 
     def add_exchange_rate(self, base_currency_name: str, target_currency_name: str,
                           rate: Decimal) -> ExchangeRateResponse:
+        if base_currency_name == target_currency_name:
+            raise ExchangeRateAlreadyExistsError("Обмен валюты на себя всегда равен количеству.")
         try:
             inserted_id = self.exchange_rate_dao.add_exchange_rates(base_currency_name, target_currency_name, rate)
             if inserted_id == 0:

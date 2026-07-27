@@ -4,15 +4,15 @@ import pytest
 import requests
 
 
-@pytest.mark.parametrize("frm,to,excepted", [("RUB", "EUR", Decimal("0.99")), ("EUR", "RUB", Decimal("2"))])
+@pytest.mark.parametrize("frm,to,excepted", [("RUB", "EUR", Decimal("1")), ("EUR", "RUB", Decimal("4"))])
 def test_get_exchange_returns_200(server_url, exchange_rate_dao, currency_dao, currency_factory,
                                   frm, to, excepted):
     currency1 = currency_factory(code="RUB")
     currency2 = currency_factory(code="EUR")
     currency1_id = currency_dao.add_currency(**currency1)
     currency2_id = currency_dao.add_currency(**currency2)
-    rate = Decimal("0.99")
-    amount = 1
+    rate = Decimal("0.5")
+    amount = 2
     exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency2_id, rate)
 
     payload = {
@@ -53,8 +53,27 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(server_url, exchange_rate_d
     response = requests.get(f"{server_url}/exchange", params=payload)
     assert response.status_code == 200
     response_data = response.json()
-    print(response_data)
 
     assert Decimal(response_data["convertedAmount"]) == Decimal("40")
     assert response_data["baseCurrency"]["code"] == currency2["code"]
     assert response_data["targetCurrency"]["code"] == currency3["code"]
+
+
+def test_get_exchange_from_a_to_a_returns_200(server_url, exchange_rate_dao, currency_dao, currency_factory):
+    currency = currency_factory(code="USD")
+    amount = 100
+    currency_dao.add_currency(currency["code"], currency["name"], currency["sign"])
+
+    payload = {
+        "from": currency["code"],
+        "to": currency["code"],
+        "amount": amount
+    }
+
+    response = requests.get(f"{server_url}/exchange", params=payload)
+    assert response.status_code == 200
+    response_data = response.json()
+
+    assert Decimal(response_data["convertedAmount"]) == Decimal("100")
+    assert response_data["baseCurrency"]["code"] == currency["code"]
+    assert response_data["targetCurrency"]["code"] == currency["code"]
