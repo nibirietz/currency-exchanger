@@ -32,6 +32,11 @@ def create_handler(
         exchange_rate_service = injected_exchange_rate_service
         exchange_service = injected_exchange_service
 
+        def _set_cors_headers(self):
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
         def _find_route(self, method: str, path: str):
             if (method, path) in router.routes:
                 return router.routes[(method, path)], {}
@@ -104,14 +109,17 @@ def create_handler(
             self._handle_method("PATCH")
             print(self.path)
 
+        def do_OPTIONS(self):
+            self.send_response(200)
+            self._set_cors_headers()
+            self.end_headers()
+
         def send_json(self, status: int, data: dict | list[dict]):
             response = json.dumps(data, use_decimal=True).encode("utf-8")
             self.send_response(status)
+            self._set_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(response)))
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            self.send_header('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type')
             self.end_headers()
             self.wfile.write(response)
 
