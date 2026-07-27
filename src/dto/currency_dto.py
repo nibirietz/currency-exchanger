@@ -1,3 +1,4 @@
+import string
 from dataclasses import dataclass
 
 
@@ -13,8 +14,11 @@ class CurrencyRequest(Currency):
     def __post_init__(self):
         self.code = self.code.upper().strip()
         print(self.code)
-        if len(self.code) != 3 or not self.code.isalpha():
+        if len(self.code) != 3:
             raise ValueError("Код должен состоять из 3 символов.")
+        for i in self.code:
+            if i not in string.ascii_letters:
+                raise ValueError("Код должен состоять только из латинских букв.")
         if not (1 <= len(self.sign) <= 3):
             raise ValueError("Знак должен состоять из 1-2 символов.")
 

@@ -84,7 +84,7 @@ def create_handler(
                 self.send_json(500, {"message": "Внутренняя ошибка сервера."})
                 print(str(e))
 
-        def parse_body_to_dict(self) -> dict:
+        def parse_from_to_dict(self) -> dict:
             content_length = int(self.headers["Content-Length"])
             raw_body = self.rfile.read(content_length)
             raw_dict = parse_qs(raw_body)
@@ -99,15 +99,12 @@ def create_handler(
 
         def do_GET(self):
             self._handle_method("GET")
-            print(self.path)
 
         def do_POST(self):
             self._handle_method("POST")
-            print(self.path)
 
         def do_PATCH(self):
             self._handle_method("PATCH")
-            print(self.path)
 
         def do_OPTIONS(self):
             self.send_response(200)
@@ -122,10 +119,6 @@ def create_handler(
             self.send_header("Content-Length", str(len(response)))
             self.end_headers()
             self.wfile.write(response)
-
-        @router.route(method="GET", path="/")
-        def get_root(self):
-            self.send_json(200, {"message": "Это главная страница."})
 
         @router.route(method="GET", path="/currencies")
         def get_currencies(self):
@@ -150,7 +143,7 @@ def create_handler(
 
         @router.route(method="POST", path="/currencies")
         def add_currency(self):
-            currency_view = self.parse_body_to_dict()
+            currency_view = self.parse_from_to_dict()
 
             try:
                 currency_post = CurrencyMapper.dict_to_request(currency_view)
@@ -190,7 +183,7 @@ def create_handler(
         @router.route(method="POST", path="/exchangeRates")
         def add_exchange_rate(self):
             try:
-                exchange_rate_request = ExchangeRateMapper.dict_to_request(self.parse_body_to_dict())
+                exchange_rate_request = ExchangeRateMapper.dict_to_request(self.parse_from_to_dict())
                 exchange_rate_response = self.exchange_rate_service.add_exchange_rate(
                     exchange_rate_request.base_currency_code,
                     exchange_rate_request.target_currency_code,
@@ -206,7 +199,7 @@ def create_handler(
 
         @router.route(method="PATCH", path="/exchangeRate/{codes}")
         def patch_exchange_rate(self, codes: str):
-            body_dict = self.parse_body_to_dict()
+            body_dict = self.parse_from_to_dict()
             if "rate" not in body_dict:
                 self.send_json(400, {"message": "Отсутствует необходимое поле."})
                 return
