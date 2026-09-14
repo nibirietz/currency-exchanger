@@ -8,9 +8,7 @@ class CurrencyMapper:
     @staticmethod
     def dict_to_request(currency: dict) -> CurrencyRequest:
         return CurrencyRequest(
-            name=currency["name"],
-            code=currency["code"],
-            sign=currency["sign"]
+            name=currency["name"], code=currency["code"], sign=currency["sign"]
         )
 
     @staticmethod
@@ -24,17 +22,11 @@ class CurrencyMapper:
     @staticmethod
     def request_to_response(currency: CurrencyRequest, id: int) -> CurrencyResponse:
         return CurrencyResponse(
-            id=id,
-            name=currency.name,
-            code=currency.code,
-            sign=currency.sign
+            id=id, name=currency.name, code=currency.code, sign=currency.sign
         )
 
     @staticmethod
     def row_to_response(row: sqlite3.Row) -> CurrencyResponse:
         return CurrencyResponse(
-            id=row["id"],
-            code=row["code"],
-            name=row["full_name"],
-            sign=row["sign"]
+            id=row["id"], code=row["code"], name=row["full_name"], sign=row["sign"]
         )

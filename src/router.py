@@ -8,7 +8,7 @@ class Router:
 
     def route(self, method: str, path: str):
         def decorator(func):
-            if '{' in path or '}' in path:
+            if "{" in path or "}" in path:
                 parser = compile(path)
                 self.pattern_routes.append(
                     {

@@ -11,17 +11,23 @@ class ExchangeService:
         self.currency_dao = currency_dao
         self.exchange_rate_dao = exchange_rate_dao
 
-    def _get_direct_rate(self, base_code: str, target_code: str, amount: Decimal) -> dict | None:
+    def _get_direct_rate(
+        self, base_code: str, target_code: str, amount: Decimal
+    ) -> dict | None:
         exchange_rate = self.exchange_rate_dao.get_exchange_rate(base_code, target_code)
 
         if exchange_rate is not None:
             converted_amount = amount * exchange_rate.rate
-            exchange = ExchangeMapper.exchange_rate_to_dict(exchange_rate, amount, converted_amount)
+            exchange = ExchangeMapper.exchange_rate_to_dict(
+                exchange_rate, amount, converted_amount
+            )
             return exchange
 
         return None
 
-    def _get_reverse_rate(self, base_code: str, target_code: str, amount: Decimal) -> dict | None:
+    def _get_reverse_rate(
+        self, base_code: str, target_code: str, amount: Decimal
+    ) -> dict | None:
         exchange_rate = self.exchange_rate_dao.get_exchange_rate(target_code, base_code)
 
         if exchange_rate is not None:
@@ -30,25 +36,36 @@ class ExchangeService:
             base_currency = self.currency_dao.get_currency(base_code)
             target_currency = self.currency_dao.get_currency(target_code)
             if base_currency is not None and target_currency is not None:
-                exchange = ExchangeMapper.currencies_to_dict(base_currency, target_currency, 1 / rate, amount,
-                                                             converted_amount)
+                exchange = ExchangeMapper.currencies_to_dict(
+                    base_currency, target_currency, 1 / rate, amount, converted_amount
+                )
 
                 return exchange
 
         return None
 
-    def _get_cross_rate(self, base_code: str, target_code: str, amount: Decimal) -> dict | None:
-        exchange_rate_usd_to_base = self.exchange_rate_dao.get_exchange_rate("USD", base_code)
-        exchange_rate_usd_to_target = self.exchange_rate_dao.get_exchange_rate("USD", target_code)
+    def _get_cross_rate(
+        self, base_code: str, target_code: str, amount: Decimal
+    ) -> dict | None:
+        exchange_rate_usd_to_base = self.exchange_rate_dao.get_exchange_rate(
+            "USD", base_code
+        )
+        exchange_rate_usd_to_target = self.exchange_rate_dao.get_exchange_rate(
+            "USD", target_code
+        )
 
-        if exchange_rate_usd_to_base is not None and exchange_rate_usd_to_target is not None:
+        if (
+            exchange_rate_usd_to_base is not None
+            and exchange_rate_usd_to_target is not None
+        ):
             base_currency = self.currency_dao.get_currency(base_code)
             target_currency = self.currency_dao.get_currency(target_code)
             rate = exchange_rate_usd_to_target.rate / exchange_rate_usd_to_base.rate
             converted_amount = amount * rate
             if base_currency is not None and target_currency is not None:
-                exchange = ExchangeMapper.currencies_to_dict(base_currency, target_currency, rate, amount,
-                                                             converted_amount)
+                exchange = ExchangeMapper.currencies_to_dict(
+                    base_currency, target_currency, rate, amount, converted_amount
+                )
                 return exchange
             else:
                 return None
@@ -60,7 +77,9 @@ class ExchangeService:
             currency = self.currency_dao.get_currency(base_code)
             if not currency:
                 raise ExchangeRateNotFoundError("Обменная пара не найдена")
-            exchange = ExchangeMapper.currencies_to_dict(currency, currency, Decimal("1"), amount, amount)
+            exchange = ExchangeMapper.currencies_to_dict(
+                currency, currency, Decimal(1), amount, amount
+            )
             return exchange
 
         exchange = self._get_direct_rate(base_code, target_code, amount)

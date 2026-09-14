@@ -1,8 +1,8 @@
 import threading
+from collections.abc import Generator
 from decimal import Decimal
 from http.server import HTTPServer
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
@@ -25,9 +25,13 @@ class TestCurrencyDAO(CurrencyDAO):
 
 
 class TestExchangeRateDAO(ExchangeRateDAO):
-    def add_exchange_rate_by_id(self, base_id: int, target_id: int, rate: Decimal) -> int:
+    def add_exchange_rate_by_id(
+        self, base_id: int, target_id: int, rate: Decimal
+    ) -> int:
         query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?);"""
-        return self._execute_returning_last_row_id(query, (base_id, target_id, str(rate)))
+        return self._execute_returning_last_row_id(
+            query, (base_id, target_id, str(rate))
+        )
 
 
 @pytest.fixture
@@ -48,7 +52,9 @@ def server_url(db_path) -> Generator[str]:
     exchange_rate_dao = ExchangeRateDAO(str(db_path))
     exchange_rate_service = ExchangeRateService(exchange_rate_dao)
     exchange_service = ExchangeService(currency_dao, exchange_rate_dao)
-    server_handler = create_handler(currency_service, exchange_rate_service, exchange_service)
+    server_handler = create_handler(
+        currency_service, exchange_rate_service, exchange_service
+    )
     server = HTTPServer(("0.0.0.0", 0), server_handler)
     host, port = server.server_address
 
@@ -66,21 +72,9 @@ def server_url(db_path) -> Generator[str]:
 def currency_factory():
     def create_currency(code: str, without: list[str] | None = None) -> dict:
         currencies = {
-            "USD": {
-                "code": "USD",
-                "name": "United States dollar",
-                "sign": "$"
-            },
-            "RUB": {
-                "code": "RUB",
-                "name": "Russian ruble",
-                "sign": "₽"
-            },
-            "EUR": {
-                "code": "EUR",
-                "name": "Euro",
-                "sign": "€"
-            }
+            "USD": {"code": "USD", "name": "United States dollar", "sign": "$"},
+            "RUB": {"code": "RUB", "name": "Russian ruble", "sign": "₽"},
+            "EUR": {"code": "EUR", "name": "Euro", "sign": "€"},
         }
 
         currency = dict(currencies[code])

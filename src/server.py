@@ -23,9 +23,9 @@ router = Router()
 
 
 def create_handler(
-        injected_currency_service: CurrencyService,
-        injected_exchange_rate_service: ExchangeRateService,
-        injected_exchange_service: ExchangeService
+    injected_currency_service: CurrencyService,
+    injected_exchange_rate_service: ExchangeRateService,
+    injected_exchange_service: ExchangeService,
 ) -> type[BaseHTTPRequestHandler]:
     class ServerHandler(BaseHTTPRequestHandler):
         currency_service = injected_currency_service
@@ -34,7 +34,9 @@ def create_handler(
 
         def _set_cors_headers(self):
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+            self.send_header(
+                "Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS"
+            )
             self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
         def _find_route(self, method: str, path: str):
@@ -180,13 +182,17 @@ def create_handler(
         @router.route(method="POST", path="/exchangeRates")
         def add_exchange_rate(self):
             try:
-                exchange_rate_request = ExchangeRateMapper.dict_to_request(self.parse_from_to_dict())
+                exchange_rate_request = ExchangeRateMapper.dict_to_request(
+                    self.parse_from_to_dict()
+                )
                 exchange_rate_response = self.exchange_rate_service.add_exchange_rate(
                     exchange_rate_request.base_currency_code,
                     exchange_rate_request.target_currency_code,
                     exchange_rate_request.rate,
                 )
-                self.send_json(201, ExchangeRateMapper.response_to_view(exchange_rate_response))
+                self.send_json(
+                    201, ExchangeRateMapper.response_to_view(exchange_rate_response)
+                )
             except KeyError:
                 self.send_json(400, {"message": "Отсутствует нужное поле формы."})
             except ExchangeRateAlreadyExistsError as e:
@@ -218,10 +224,11 @@ def create_handler(
         @router.route(method="GET", path="/exchange")
         def get_exchange(self, **kwargs):
             try:
-                exchange = self.exchange_service.get_exchange(kwargs["from"], kwargs["to"],
-                                                              Decimal(kwargs["amount"]))
+                exchange = self.exchange_service.get_exchange(
+                    kwargs["from"], kwargs["to"], Decimal(kwargs["amount"])
+                )
                 self.send_json(200, exchange)
-            except KeyError as e:
+            except KeyError:
                 self.send_json(400, {"message": "Не хватает параметра."})
 
     return ServerHandler

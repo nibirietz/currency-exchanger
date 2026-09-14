@@ -3,7 +3,7 @@ from dataclasses import asdict
 from decimal import Decimal
 
 from src.dto.currency_dto import CurrencyResponse
-from src.dto.exchange_rate_dto import ExchangeRateResponse, ExchangeRateRequest
+from src.dto.exchange_rate_dto import ExchangeRateRequest, ExchangeRateResponse
 
 
 class ExchangeRateMapper:
@@ -13,21 +13,21 @@ class ExchangeRateMapper:
             id=row["base_currency_id"],
             name=row["base_currency_full_name"],
             code=row["base_currency_code"],
-            sign=row["base_currency_sign"]
+            sign=row["base_currency_sign"],
         )
 
         target_currency = CurrencyResponse(
             id=row["target_currency_id"],
             name=row["target_currency_full_name"],
             code=row["target_currency_code"],
-            sign=row["target_currency_sign"]
+            sign=row["target_currency_sign"],
         )
 
         exchange_rate = ExchangeRateResponse(
             id=row["id"],
             base_currency=base_currency,
             target_currency=target_currency,
-            rate=Decimal(str(row["rate"]))
+            rate=Decimal(str(row["rate"])),
         )
 
         return exchange_rate
@@ -38,7 +38,7 @@ class ExchangeRateMapper:
             "id": response.id,
             "baseCurrency": asdict(response.base_currency),
             "targetCurrency": asdict(response.target_currency),
-            "rate": response.rate
+            "rate": response.rate,
         }
 
         return view
@@ -48,7 +48,7 @@ class ExchangeRateMapper:
         exchange_rate_request = ExchangeRateRequest(
             base_currency_code=exchange_rate["baseCurrencyCode"],
             target_currency_code=exchange_rate["targetCurrencyCode"],
-            rate=Decimal(exchange_rate["rate"])
+            rate=Decimal(exchange_rate["rate"]),
         )
 
         return exchange_rate_request

@@ -17,7 +17,9 @@ def main():
     exchange_rate_dao = ExchangeRateDAO(Config.DATABASE_PATH)
     exchange_rate_service = ExchangeRateService(exchange_rate_dao)
     exchange_service = ExchangeService(currency_dao, exchange_rate_dao)
-    server_handler = create_handler(currency_service, exchange_rate_service, exchange_service)
+    server_handler = create_handler(
+        currency_service, exchange_rate_service, exchange_service
+    )
     server = HTTPServer(("0.0.0.0", 8080), server_handler)
     server.serve_forever()
 
