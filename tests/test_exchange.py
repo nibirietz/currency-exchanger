@@ -1,22 +1,33 @@
+from collections.abc import Callable, Mapping
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 import requests
+
+from src.database.currency_dao import CurrencyDAO
+from src.database.exchange_rate_dao import ExchangeRateDAO
 
 
 @pytest.mark.parametrize(
     "frm,to,excepted", [("RUB", "EUR", Decimal(1)), ("EUR", "RUB", Decimal(4))]
 )
 def test_get_exchange_returns_200(
-    server_url, exchange_rate_dao, currency_dao, currency_factory, frm, to, excepted
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
+    frm: str,
+    to: str,
+    excepted: Decimal,
 ):
     currency1 = currency_factory(code="RUB")
     currency2 = currency_factory(code="EUR")
-    currency1_id = currency_dao.add_currency(**currency1)
-    currency2_id = currency_dao.add_currency(**currency2)
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")
     amount = 2
-    exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency2_id, rate)
+    _ = exchange_rate_dao.add_exchange_rates(currency1["code"], currency2["code"], rate)
 
     payload = {"from": frm, "to": to, "amount": amount}
 
@@ -31,19 +42,26 @@ def test_get_exchange_returns_200(
 
 
 def test_get_exchange_from_a_to_usd_to_b_returns_200(
-    server_url, exchange_rate_dao, currency_dao, currency_factory
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="EUR")
     currency3 = currency_factory(code="RUB")
-    currency1_id = currency_dao.add_currency(**currency1)
-    currency2_id = currency_dao.add_currency(**currency2)
-    currency3_id = currency_dao.add_currency(**currency3)
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
+    _ = currency_dao.add_currency(**currency3)
     rate1_to_2 = Decimal("0.5")
     rate1_to_3 = Decimal(2)
     amount = 10
-    exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency2_id, rate1_to_2)
-    exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency3_id, rate1_to_3)
+    _ = exchange_rate_dao.add_exchange_rates(
+        currency1["code"], currency2["code"], rate1_to_2
+    )
+    _ = exchange_rate_dao.add_exchange_rates(
+        currency1["code"], currency3["code"], rate1_to_3
+    )
 
     payload = {"from": currency2["code"], "to": currency3["code"], "amount": amount}
 
@@ -57,7 +75,9 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(
 
 
 def test_get_exchange_from_a_to_a_returns_200(
-    server_url, exchange_rate_dao, currency_dao, currency_factory
+    server_url: Path,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency = currency_factory(code="USD")
     amount = 100

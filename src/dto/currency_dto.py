@@ -1,28 +1,32 @@
-import string
 from dataclasses import dataclass
 
 
-@dataclass
-class Currency:
+@dataclass(frozen=True, slots=True)
+class CurrencyRequest:
     name: str
     code: str
     sign: str
 
-
-@dataclass
-class CurrencyRequest(Currency):
-    def __post_init__(self):
-        self.code = self.code.upper().strip()
-        print(self.code)
-        if len(self.code) != 3:
+    @classmethod
+    def create(cls, name: str, code: str, sign: str):
+        code = code.strip().upper()
+        sign = sign.strip()
+        name = name.strip()
+        print(f"{sign=}")
+        if len(code) != 3:
             raise ValueError("Код должен состоять из 3 символов.")
-        for i in self.code:
-            if i not in string.ascii_letters:
-                raise ValueError("Код должен состоять только из латинских букв.")
-        if not (1 <= len(self.sign) <= 3):
+        if not code.isascii() or not code.isalpha():
+            raise ValueError("Код должен состоять только из латинских букв.")
+        if not (1 <= len(sign) <= 3) or sign == "":
             raise ValueError("Знак должен состоять из 1-2 символов.")
+        if not (1 <= len(name) <= 30):
+            raise ValueError("Имя должно состоять из 1-30 символов.")
+        return cls(name=name, code=code, sign=sign)
 
 
-@dataclass
-class CurrencyResponse(Currency):
+@dataclass(frozen=True, slots=True)
+class CurrencyResponse:
     id: int
+    name: str
+    code: str
+    sign: str

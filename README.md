@@ -53,3 +53,8 @@ cd currency-exchange-frontend
 chmod +x launch-local-nginx.sh
 ./launch-local-nginx.sh
 ```
+
+#### Текущие планы
+[ ] Поменять `requests` на `zapros`.
+[ ] Добавить тесты на запросы с пустыми или лишними параметрами.
+[ ] Переписать работу с БД в тестах.

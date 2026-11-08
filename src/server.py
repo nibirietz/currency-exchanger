@@ -124,7 +124,7 @@ def create_handler(
             currencies: list[CurrencyResponse] = (
                 self.currency_service.get_all_currencies()
             )
-            currencies_view: list[dict] = [asdict(currency) for currency in currencies]
+            currencies_view = [asdict(currency) for currency in currencies]
             self.send_json(200, currencies_view)
 
         @router.route(method="GET", path="/currency/{currency_name}")

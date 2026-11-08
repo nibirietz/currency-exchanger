@@ -1,12 +1,13 @@
 import sqlite3
 from abc import ABC
+from pathlib import Path
 
 from src.database.db_session import db_session
 
 
 class BaseDAO(ABC):
-    def __init__(self, db_path: str):
-        self.db_path = db_path
+    def __init__(self, db_path: Path):
+        self.db_path: Path = db_path
 
     def _execute(self, query: str, params: tuple | None = None):
         with db_session(self.db_path) as cursor:

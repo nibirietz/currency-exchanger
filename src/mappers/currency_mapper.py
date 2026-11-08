@@ -7,7 +7,7 @@ from src.dto.currency_dto import CurrencyRequest, CurrencyResponse
 class CurrencyMapper:
     @staticmethod
     def dict_to_request(currency: dict) -> CurrencyRequest:
-        return CurrencyRequest(
+        return CurrencyRequest.create(
             name=currency["name"], code=currency["code"], sign=currency["sign"]
         )
 

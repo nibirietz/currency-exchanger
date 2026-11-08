@@ -1,7 +1,8 @@
 import sqlite3
+from pathlib import Path
 
 
-def create_db(db_path: str):
+def create_db(db_path: Path):
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
     currency_query = """CREATE TABLE IF NOT EXISTS currencies(

@@ -1,5 +1,5 @@
 import threading
-from collections.abc import Generator
+from collections.abc import Callable, Generator, Mapping
 from decimal import Decimal
 from http.server import HTTPServer
 from pathlib import Path
@@ -16,40 +16,26 @@ from src.services.exchange_service import ExchangeService
 
 
 @pytest.fixture
-def db_path(tmp_path: Path):
+def db_path(tmp_path: Path) -> Path:
     return tmp_path / "test.sqlite"
 
 
-class TestCurrencyDAO(CurrencyDAO):
-    pass
-
-
-class TestExchangeRateDAO(ExchangeRateDAO):
-    def add_exchange_rate_by_id(
-        self, base_id: int, target_id: int, rate: Decimal
-    ) -> int:
-        query = """INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?);"""
-        return self._execute_returning_last_row_id(
-            query, (base_id, target_id, str(rate))
-        )
+@pytest.fixture
+def currency_dao(db_path: Path) -> CurrencyDAO:
+    return CurrencyDAO(db_path)
 
 
 @pytest.fixture
-def currency_dao(db_path) -> TestCurrencyDAO:
-    return TestCurrencyDAO(str(db_path))
+def exchange_rate_dao(db_path: Path) -> ExchangeRateDAO:
+    return ExchangeRateDAO(db_path)
 
 
 @pytest.fixture
-def exchange_rate_dao(db_path) -> TestExchangeRateDAO:
-    return TestExchangeRateDAO(str(db_path))
-
-
-@pytest.fixture
-def server_url(db_path) -> Generator[str]:
-    create_db(str(db_path))
-    currency_dao = CurrencyDAO(str(db_path))
+def server_url(db_path: Path) -> Generator[str]:
+    create_db(db_path)
+    currency_dao = CurrencyDAO(db_path)
     currency_service = CurrencyService(currency_dao)
-    exchange_rate_dao = ExchangeRateDAO(str(db_path))
+    exchange_rate_dao = ExchangeRateDAO(db_path)
     exchange_rate_service = ExchangeRateService(exchange_rate_dao)
     exchange_service = ExchangeService(currency_dao, exchange_rate_dao)
     server_handler = create_handler(
@@ -69,8 +55,10 @@ def server_url(db_path) -> Generator[str]:
 
 
 @pytest.fixture
-def currency_factory():
-    def create_currency(code: str, without: list[str] | None = None) -> dict:
+def currency_factory() -> Callable[[str], Mapping[str, object]]:
+    def create_currency(
+        code: str, without: list[str] | None = None
+    ) -> Mapping[str, object]:
         currencies = {
             "USD": {"code": "USD", "name": "United States dollar", "sign": "$"},
             "RUB": {"code": "RUB", "name": "Russian ruble", "sign": "₽"},
@@ -81,14 +69,16 @@ def currency_factory():
 
         if without:
             for key in without:
-                currency.pop(key)
+                _ = currency.pop(key)
 
         return currency
 
     return create_currency
 
 
-def assert_currencies_response(excepted: dict, received: dict):
+def assert_currencies_response(
+    excepted: dict[str, object], received: dict[str, object]
+):
     assert received["code"] == excepted["code"]
     assert received["name"] == excepted["name"]
     assert received["sign"] == excepted["sign"]

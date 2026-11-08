@@ -1,20 +1,27 @@
+from collections.abc import Callable, Mapping
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 import requests
 
+from src.database.currency_dao import CurrencyDAO
+from src.database.exchange_rate_dao import ExchangeRateDAO
 from tests.conftest import assert_currencies_response
 
 
 def test_get_exchange_rates_returns_200(
-    server_url, currency_dao, exchange_rate_dao, currency_factory
+    server_url: Path,
+    currency_dao: CurrencyDAO,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="RUB")
     currency1_id = currency_dao.add_currency(**currency1)
     currency2_id = currency_dao.add_currency(**currency2)
-    exchange_rate_id = exchange_rate_dao.add_exchange_rate_by_id(
-        currency1_id, currency2_id, Decimal("0.5")
+    exchange_rate_id = exchange_rate_dao.add_exchange_rates(
+        currency1["code"], currency2["code"], Decimal("0.5")
     )
 
     response = requests.get(
@@ -32,7 +39,10 @@ def test_get_exchange_rates_returns_200(
 
 
 def test_add_exchange_rate_returns_201(
-    server_url, exchange_rate_dao, currency_dao, currency_factory
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="RUB")
@@ -59,14 +69,19 @@ def test_add_exchange_rate_returns_201(
     assert currency1_db is not None
     assert currency2_db is not None
 
-    exchange_rate = exchange_rate_dao.get_exchange_rate_by_id(response_data["id"])
+    exchange_rate = exchange_rate_dao.get_exchange_rate(
+        currency1["code"], currency2["code"]
+    )
     assert response_data["baseCurrency"]["id"] == exchange_rate.base_currency.id
     assert response_data["targetCurrency"]["id"] == exchange_rate.target_currency.id
 
 
 @pytest.mark.parametrize("field", ["baseCurrencyCode", "targetCurrencyCode"])
 def test_add_exchange_rate_with_missing_code_400(
-    server_url, exchange_rate_dao, currency_dao, currency_factory, field
+    server_url: path,
+    currency_dao: currencydao,
+    currency_factory: callable[[str], mapping[str, object]],
+    field: str,
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="RUB")
@@ -80,7 +95,7 @@ def test_add_exchange_rate_with_missing_code_400(
         "rate": str(rate),
     }
 
-    data.pop(field)
+    _ = data.pop(field)
 
     response = requests.post(f"{server_url}/exchangeRates", data=data, timeout=3)
     assert response.status_code == 400
@@ -90,12 +105,15 @@ def test_add_exchange_rate_with_missing_code_400(
 
 
 def test_add_exchange_rate_with_missing_rate_400(
-    server_url, exchange_rate_dao, currency_dao, currency_factory
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="RUB")
-    currency1_id = currency_dao.add_currency(**currency1)
-    currency2_id = currency_dao.add_currency(**currency2)
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
 
     data = {
         "baseCurrencyCode": currency1["code"],
@@ -107,13 +125,18 @@ def test_add_exchange_rate_with_missing_rate_400(
     response_data = response.json()
 
     assert "message" in response_data
-    exchange_rate = exchange_rate_dao.get_exchange_rate(currency1_id, currency2_id)
+    exchange_rate = exchange_rate_dao.get_exchange_rate(
+        currency1["code"], currency2["code"]
+    )
 
     assert exchange_rate is None
 
 
 def test_add_exchange_rate_with_duplicate_code_409(
-    server_url, exchange_rate_dao, currency_factory, currency_dao
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency = currency_factory(code="USD")
     currency_id = currency_dao.add_currency(**currency)
@@ -128,20 +151,27 @@ def test_add_exchange_rate_with_duplicate_code_409(
     response_data = response.json()
 
     assert "message" in response_data
-    exchange_rate = exchange_rate_dao.get_exchange_rate(currency_id, currency_id)
+    exchange_rate = exchange_rate_dao.get_exchange_rate(
+        currency["code"], currency["code"]
+    )
 
     assert exchange_rate is None
 
 
 def test_patch_exchange_rate_returns_200(
-    server_url, exchange_rate_dao, currency_dao, currency_factory
+    server_url: Path,
+    exchange_rate_dao: ExchangeRateDAO,
+    currency_dao: CurrencyDAO,
+    currency_factory: Callable[[str], Mapping[str, object]],
 ):
     currency1 = currency_factory(code="USD")
     currency2 = currency_factory(code="RUB")
-    currency1_id = currency_dao.add_currency(**currency1)
-    currency2_id = currency_dao.add_currency(**currency2)
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")
-    exchange_rate_dao.add_exchange_rate_by_id(currency1_id, currency2_id, rate)
+    exchange = exchange_rate_dao.add_exchange_rates(
+        currency1["code"], currency2["code"], rate
+    )
     changed_rate = 0.9
 
     data = {"rate": changed_rate}
