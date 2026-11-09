@@ -131,6 +131,9 @@ def create_handler(
         @router.route(method="GET", path="/currency/{currency_name}")
         def get_currency(self, currency_name: str):
             try:
+                currency_name = currency_name.strip().lower()
+                if currency_name == "":
+                    self.send_json(400, {"message": "Код валюты отсутствует в адресе."})
                 currency = self.currency_service.get_currency(currency_name)
                 currency_view = CurrencyMapper.response_to_dict(currency)
                 self.send_json(200, currency_view)
@@ -170,6 +173,7 @@ def create_handler(
             if len(codes) != 6:
                 self.send_json(404, {"message": "Обменный курс не найден."})
                 return
+            codes = codes.capitalize()
             base_code, target_code = codes[:3], codes[3:]
 
             try:
@@ -204,6 +208,7 @@ def create_handler(
         @router.route(method="PATCH", path="/exchangeRate/{codes}")
         def patch_exchange_rate(self, codes: str):
             body_dict = self.parse_from_to_dict()
+            codes = codes.capitalize()
             if "rate" not in body_dict:
                 self.send_json(400, {"message": "Отсутствует необходимое поле."})
                 return
@@ -225,8 +230,10 @@ def create_handler(
         @router.route(method="GET", path="/exchange")
         def get_exchange(self, **kwargs):
             try:
+                frm = kwargs["from"].capitalize()
+                to = kwargs["to"].capitalize()
                 exchange = self.exchange_service.get_exchange(
-                    kwargs["from"], kwargs["to"], Decimal(kwargs["amount"])
+                    frm, to, Decimal(kwargs["amount"])
                 )
                 self.send_json(200, exchange)
             except KeyError:
