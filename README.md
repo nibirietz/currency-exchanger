@@ -20,7 +20,7 @@ REST-API для обмена валют на Python.
 
 Требуется Python(3.14+).
 
-```
+```bash
 git clone https://github.com/nibirietz/currency-exchanger.git
 cd currency-exchanger
 
@@ -36,7 +36,7 @@ python main.py
 
 ##### Через Docker:
 
-```
+```bash
 git clone https://github.com/nibirietz/currency-exchanger.git
 cd currency-exchanger
 docker build -t currency-exchanger .
@@ -46,7 +46,7 @@ docker run -d -p 8080:8080 currency-exchanger:latest
 
 ##### Фронтенд:
 
-```
+```bash
 git clone https://github.com/zhukovsd/currency-exchange-frontend.git
 cd currency-exchange-frontend
 # Запустите скрипт, предварительно сделав его запускаемым(для Linux):
@@ -55,6 +55,6 @@ chmod +x launch-local-nginx.sh
 ```
 
 #### Текущие планы
-~~[ ] Поменять `requests` на `zapros`.~~ Решено использовать это уже в другом проекте.
-[ ] Добавить тесты на запросы с пустыми или лишними параметрами.
-[ ] Переписать работу с БД в тестах.
+~~[ ] Поменять `requests` на `zapros`.~~ Решено использовать это уже в другом проекте. \
+[ ] Добавить тесты на запросы с пустыми или лишними параметрами. \
+~~[ ] Переписать работу с БД в тестах.~~ Решено не переписывать, слишком много переписывать, но пользы в этом проекте будет мало.

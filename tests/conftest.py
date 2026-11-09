@@ -53,7 +53,7 @@ def server_url(db_path: Path) -> Generator[str]:
     server.server_close()
 
 
-def create_currency(code: str, without: list[str] | None = None) -> Mapping[str, str]:
+def create_currency(code: str, without: list[str] | None = None) -> dict[str, str]:
     currencies = {
         "USD": {"code": "USD", "name": "United States dollar", "sign": "$"},
         "RUB": {"code": "RUB", "name": "Russian ruble", "sign": "₽"},
