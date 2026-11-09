@@ -134,10 +134,10 @@ def create_handler(
 
         @router.route(method="GET", path="/currency/{currency_name}")
         def get_currency(self, currency_name: str):
+            if not re.fullmatch(r"[A-Z]{3}", currency_name):
+                self.send_json(400, {"message": "Не подходит по формату."})
+                return
             try:
-                if not re.fullmatch(r"[A-Z]{3}", currency_name):
-                    self.send_json(400, {"message": "Не подходит по формату."})
-                    return
                 currency = self.currency_service.get_currency(currency_name)
                 currency_view = CurrencyMapper.response_to_dict(currency)
                 self.send_json(200, currency_view)

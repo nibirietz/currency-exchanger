@@ -10,10 +10,9 @@ class CurrencyRequest:
 
     @classmethod
     def create(cls, name: str, code: str, sign: str) -> Self:
-        code = code.strip().upper()
-        sign = sign.strip()
+        code = code
+        sign = sign
         name = name.strip()
-        print(f"{sign=}")
         if len(code) != 3:
             raise ValueError("Код должен состоять из 3 символов.")
         if not code.isascii() or not code.isalpha():
@@ -22,6 +21,8 @@ class CurrencyRequest:
             raise ValueError("Знак должен состоять из 1-2 символов.")
         if not (1 <= len(name) <= 30):
             raise ValueError("Имя должно состоять из 1-30 символов.")
+        if code != code.upper():
+            raise ValueError("Код должен быть в верхнем регистре.")
         return cls(name=name, code=code, sign=sign)
 
 
