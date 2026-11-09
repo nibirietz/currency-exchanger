@@ -8,6 +8,7 @@ from src.exceptions import (
     ExchangeRateAlreadyExistsError,
     ExchangeRateMatchingCodes,
     ExchangeRateNotFoundError,
+    ExchangeRateZeroRateError,
 )
 
 
@@ -22,6 +23,8 @@ class ExchangeRateService:
             raise ExchangeRateMatchingCodes(
                 "Совпадающие коды."
             )
+        if rate <= 0:
+            raise ExchangeRateZeroRateError("rate <= 0 недопустим.")
         try:
             inserted_id = self.exchange_rate_dao.add_exchange_rates(
                 base_currency_code, target_currency_code, rate

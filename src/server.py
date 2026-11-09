@@ -14,6 +14,7 @@ from src.exceptions import (
     ExchangeRateAlreadyExistsError,
     ExchangeRateMatchingCodes,
     ExchangeRateNotFoundError,
+    ExchangeRateZeroRateError,
 )
 from src.mappers.currency_mapper import CurrencyMapper
 from src.mappers.exchange_rate_mapper import ExchangeRateMapper
@@ -148,6 +149,11 @@ def create_handler(
         def get_currency_missing_code(self):
             self.send_json(400, {"message": "Код валюты не написан в адресе."})
 
+        
+        @router.route(method="GET", path="/currency/")
+        def get_currency_missing_code_2(self):
+            self.send_json(400, {"message": "Код валюты не написан в адресе."})
+
         @router.route(method="POST", path="/currencies")
         def add_currency(self):
             currency_view = self.parse_from_to_dict()
@@ -218,6 +224,8 @@ def create_handler(
             except CurrencyNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
             except ExchangeRateMatchingCodes as e:
+                self.send_json(400, {"message": str(e)})
+            except ExchangeRateZeroRateError as e:
                 self.send_json(400, {"message": str(e)})
 
         @router.route(method="PATCH", path="/exchangeRate/{codes}")
