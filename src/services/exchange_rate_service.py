@@ -6,6 +6,7 @@ from src.dto.exchange_rate_dto import ExchangeRateResponse
 from src.exceptions import (
     CurrencyNotFoundError,
     ExchangeRateAlreadyExistsError,
+    ExchangeRateMatchingCodes,
     ExchangeRateNotFoundError,
 )
 
@@ -18,8 +19,8 @@ class ExchangeRateService:
         self, base_currency_name: str, target_currency_name: str, rate: Decimal
     ) -> ExchangeRateResponse:
         if base_currency_name == target_currency_name:
-            raise ExchangeRateAlreadyExistsError(
-                "Обмен валюты на себя всегда равен количеству."
+            raise ExchangeRateMatchingCodes(
+                "Совпадающие коды."
             )
         try:
             inserted_id = self.exchange_rate_dao.add_exchange_rates(

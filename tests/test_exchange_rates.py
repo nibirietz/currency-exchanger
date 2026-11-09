@@ -128,7 +128,7 @@ def test_add_exchange_rate_with_missing_rate_400(
     assert exchange_rate is None
 
 
-def test_add_exchange_rate_with_duplicate_code_409(
+def test_add_exchange_rate_with_duplicate_code_400(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
@@ -142,7 +142,7 @@ def test_add_exchange_rate_with_duplicate_code_409(
     }
 
     response = requests.post(f"{server_url}/exchangeRates", data=data, timeout=3)
-    assert response.status_code == 409
+    assert response.status_code == 400
     response_data = response.json()
 
     assert "message" in response_data

@@ -2,7 +2,8 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
+import re
+from urllib.parse import parse_qs, unquote, urlparse
 
 import simplejson as json
 
@@ -11,6 +12,7 @@ from src.exceptions import (
     CurrencyAlreadyExistsError,
     CurrencyNotFoundError,
     ExchangeRateAlreadyExistsError,
+    ExchangeRateMatchingCodes,
     ExchangeRateNotFoundError,
 )
 from src.mappers.currency_mapper import CurrencyMapper
@@ -62,7 +64,7 @@ def create_handler(
                 simple_query_params[key] = item[0]
 
             return {
-                "path": parsed_path.path,
+                "path": unquote(parsed_path.path),
                 "query_parameters": simple_query_params,
             }
 
@@ -112,7 +114,9 @@ def create_handler(
             self.end_headers()
 
         def send_json(self, status: int, data: dict | list[dict]):
-            response = json.dumps(data, use_decimal=True, ensure_ascii=False).encode("utf-8")
+            response = json.dumps(data, use_decimal=True, ensure_ascii=False).encode(
+                "utf-8"
+            )
             self.send_response(status)
             self._set_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -131,9 +135,8 @@ def create_handler(
         @router.route(method="GET", path="/currency/{currency_name}")
         def get_currency(self, currency_name: str):
             try:
-                currency_name = currency_name.strip().upper()
-                if currency_name == "":
-                    self.send_json(400, {"message": "Код валюты отсутствует в адресе."})
+                if not re.fullmatch(r"[A-Z]{3}", currency_name):
+                    self.send_json(400, {"message": "Не подходит по формату."})
                     return
                 currency = self.currency_service.get_currency(currency_name)
                 currency_view = CurrencyMapper.response_to_dict(currency)
@@ -192,6 +195,14 @@ def create_handler(
                 exchange_rate_request = ExchangeRateMapper.dict_to_request(
                     self.parse_from_to_dict()
                 )
+
+                if not re.fullmatch(
+                    r"[A-Z]{3}", exchange_rate_request.base_currency_code
+                ) or not re.fullmatch(
+                    r"[A-Z]{3}", exchange_rate_request.target_currency_code
+                ):
+                    self.send_json(400, {"message": "Неверный формат валют."})
+                    return
                 exchange_rate_response = self.exchange_rate_service.add_exchange_rate(
                     exchange_rate_request.base_currency_code,
                     exchange_rate_request.target_currency_code,
@@ -206,6 +217,8 @@ def create_handler(
                 self.send_json(409, {"message": str(e)})
             except CurrencyNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
+            except ExchangeRateMatchingCodes as e:
+                self.send_json(400, {"message": str(e)})
 
         @router.route(method="PATCH", path="/exchangeRate/{codes}")
         def patch_exchange_rate(self, codes: str):

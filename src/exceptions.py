@@ -12,3 +12,6 @@ class ExchangeRateNotFoundError(Exception):
 
 class ExchangeRateAlreadyExistsError(Exception):
     pass
+
+class ExchangeRateMatchingCodes(Exception):
+    pass
