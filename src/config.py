@@ -1,3 +1,7 @@
+from pathlib import Path
+from typing import final
+
+
+@final
 class Config:
-    DATABASE_PATH = "src/database/db.sqlite"
-    # DATABASE_PATH = ":memory:"
+    DATABASE_PATH = Path("src/database/db.sqlite")

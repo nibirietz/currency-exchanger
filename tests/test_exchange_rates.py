@@ -174,6 +174,7 @@ def test_patch_exchange_rate_returns_200(
         timeout=3,
     )
 
+    assert response.status_code == 200
     response_data = response.json()
     exchange_rate = exchange_rate_dao.get_exchange_rate(
         currency1["code"], currency2["code"]
@@ -182,3 +183,26 @@ def test_patch_exchange_rate_returns_200(
     assert exchange_rate is not None
     assert response_data["rate"] == changed_rate
     assert response_data["rate"] == float(exchange_rate.rate)
+
+
+def test_patch_not_existen_rate_returns_404(
+    server_url: Path,
+    currency_dao: CurrencyDAO,
+):
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
+    changed_rate = 0.9
+    
+    data = {"rate": changed_rate}
+
+    response = requests.patch(
+        f"{server_url}/exchangeRate/{currency1['code']}{currency2['code']}",
+        data=data,
+        timeout=3,
+    )
+
+    assert response.status_code == 404
+    response_data = response.json()
+    assert "message" in response_data
