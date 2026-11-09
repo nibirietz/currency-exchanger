@@ -242,9 +242,17 @@ def create_handler(
                 self.send_json(400, {"message": "Отсутствует необходимое поле."})
                 return
             if len(codes) != 6:
-                self.send_json(404, {"message": "Обменный курс не найден."})
+                self.send_json(400, {"message": "Обменный курс не найден."})
                 return
             base_code, target_code = codes[:3], codes[3:]
+
+            if not re.fullmatch(
+                r"[A-Z]{3}", exchange_rate_request.base_currency_code
+            ) or not re.fullmatch(
+                r"[A-Z]{3}", exchange_rate_request.target_currency_code
+            ):
+                self.send_json(400, {"message": "Неверный формат валют."})
+                return
 
             rate = body_dict["rate"]
             try:
