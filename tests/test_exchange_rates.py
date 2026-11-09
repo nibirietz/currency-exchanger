@@ -163,9 +163,7 @@ def test_patch_exchange_rate_returns_200(
     _ = currency_dao.add_currency(**currency1)
     _ = currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")
-    exchange = exchange_rate_dao.add_exchange_rates(
-        currency1["code"], currency2["code"], rate
-    )
+    _ = exchange_rate_dao.add_exchange_rates(currency1["code"], currency2["code"], rate)
     changed_rate = 0.9
 
     data = {"rate": changed_rate}
