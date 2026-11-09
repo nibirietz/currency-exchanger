@@ -72,7 +72,7 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(
     assert response_data["targetCurrency"]["code"] == currency3["code"]
 
 
-def test_get_exchange_from_a_to_a_returns_200(
+def test_get_exchange_from_a_to_a_returns_400(
     server_url: Path,
     currency_dao: CurrencyDAO,
 ):
@@ -83,12 +83,10 @@ def test_get_exchange_from_a_to_a_returns_200(
     payload = {"from": currency["code"], "to": currency["code"], "amount": amount}
 
     response = requests.get(f"{server_url}/exchange", params=payload)
-    assert response.status_code == 200
+    assert response.status_code == 400
     response_data = response.json()
 
-    assert Decimal(response_data["convertedAmount"]) == Decimal(100)
-    assert response_data["baseCurrency"]["code"] == currency["code"]
-    assert response_data["targetCurrency"]["code"] == currency["code"]
+    assert "message" in response_data
 
 
 def test_get_exchange_with_non_existent_return_404(

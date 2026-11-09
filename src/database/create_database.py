@@ -1,6 +1,8 @@
 import sqlite3
 from pathlib import Path
 
+from src.config import Config
+
 
 def create_db(db_path: Path):
     connection = sqlite3.connect(db_path)
@@ -27,4 +29,4 @@ def create_db(db_path: Path):
 
 
 if __name__ == "__main__":
-    create_db()
+    create_db(Config.DATABASE_PATH)

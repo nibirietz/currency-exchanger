@@ -264,9 +264,13 @@ def create_handler(
             try:
                 frm = kwargs["from"]
                 to = kwargs["to"]
+                if frm.strip() == "" or to.strip() == "" or kwargs["amount"].strip() == "":
+                    self.send_json(400, {"message": "Введите в поле значение."})
+                    return
+                    
 
-                if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
-                    r"[A-Z]{3}", target_code
+                if not re.fullmatch(r"[A-Z]{3}", frm) or not re.fullmatch(
+                    r"[A-Z]{3}", to
                 ):
                     self.send_json(400, {"message": "Неверный формат валют."})
                     return
