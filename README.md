@@ -41,7 +41,8 @@ git clone https://github.com/nibirietz/currency-exchanger.git
 cd currency-exchanger
 docker build -t currency-exchanger .
 # Запуск:
-docker run -d -p 8080:8080 currency-exchanger:latest
+chmod +x run.sh
+./run.sh
 ```
 
 ##### Фронтенд:
@@ -53,8 +54,3 @@ cd currency-exchange-frontend
 chmod +x launch-local-nginx.sh
 ./launch-local-nginx.sh
 ```
-
-#### Текущие планы
-~~[ ] Поменять `requests` на `zapros`.~~ Решено использовать это уже в другом проекте. \
-[ ] Добавить тесты на запросы с пустыми или лишними параметрами. \
-~~[ ] Переписать работу с БД в тестах.~~ Решено не переписывать, слишком много переписывать, но пользы в этом проекте будет мало.
