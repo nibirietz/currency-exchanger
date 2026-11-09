@@ -87,6 +87,7 @@ def test_add_currency_with_empty_field_returns_400(
     response = requests.post(
         f"{server_url}/currencies",
         data=data,
+        timeout=3,
     )
     assert response.status_code == 400
     response_data = response.json()
@@ -105,6 +106,7 @@ def test_add_currency_without_required_field_returns_400(
     response = requests.post(
         f"{server_url}/currencies",
         data=data,
+        timeout=3,
     )
     assert response.status_code == 400
     response_data = response.json()
@@ -124,6 +126,7 @@ def test_add_already_exists_currency_returns_409(
     response = requests.post(
         f"{server_url}/currencies",
         data=data,
+        timeout=3,
     )
     assert response.status_code == 409
     response_data = response.json()
@@ -138,7 +141,11 @@ def test_add_currency_with_invalid_code_length_400(
     data = create_currency(code="USD")
     data["code"] = code
 
-    response = requests.post(f"{server_url}/currencies", data=data)
+    response = requests.post(
+        f"{server_url}/currencies",
+        data=data,
+        timeout=3,
+    )
     assert response.status_code == 400
     response_data = response.json()
 
@@ -156,6 +163,7 @@ def test_add_currency_with_invalid_sign_length_400(
     response = requests.post(
         f"{server_url}/currencies",
         data=data,
+        timeout=3,
     )
     assert response.status_code == 400
     response_data = response.json()
