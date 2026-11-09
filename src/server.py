@@ -181,11 +181,17 @@ def create_handler(
         @router.route(method="GET", path="/exchangeRate/{codes}")
         def get_exchange_rate(self, codes: str):
             if len(codes) != 6:
-                self.send_json(404, {"message": "Обменный курс не найден."})
+                self.send_json(400, {"message": "Обменный курс не найден."})
                 return
             codes = codes.strip().upper()
             base_code, target_code = codes[:3], codes[3:]
-            print(codes)
+
+            if not re.fullmatch(
+                r"[A-Z]{3}", base_code
+            ) or not re.fullmatch(
+                r"[A-Z]{3}", target_code
+            ):
+                self.send_json(400, {"message": "Неправильный формат."})
 
             try:
                 exchange_rate = self.exchange_rate_service.get_exchange_rate(
@@ -212,7 +218,7 @@ def create_handler(
                 exchange_rate_response = self.exchange_rate_service.add_exchange_rate(
                     exchange_rate_request.base_currency_code,
                     exchange_rate_request.target_currency_code,
-                    exchange_rate_request.rate,
+                    Decimal(exchange_rate_request.rate),
                 )
                 self.send_json(
                     201, ExchangeRateMapper.response_to_view(exchange_rate_response)

@@ -23,7 +23,7 @@ class ExchangeRateService:
             raise ExchangeRateMatchingCodes(
                 "Совпадающие коды."
             )
-        if rate <= 0:
+        if rate <= Decimal(0):
             raise ExchangeRateZeroRateError("rate <= 0 недопустим.")
         try:
             inserted_id = self.exchange_rate_dao.add_exchange_rates(
