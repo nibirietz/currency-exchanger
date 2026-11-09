@@ -1,6 +1,5 @@
 import threading
 from collections.abc import Callable, Generator, Mapping
-from decimal import Decimal
 from http.server import HTTPServer
 from pathlib import Path
 
@@ -54,26 +53,22 @@ def server_url(db_path: Path) -> Generator[str]:
     server.server_close()
 
 
-@pytest.fixture
-def currency_factory() -> Callable[[str], Mapping[str, object]]:
-    def create_currency(
-        code: str, without: list[str] | None = None
-    ) -> Mapping[str, object]:
-        currencies = {
-            "USD": {"code": "USD", "name": "United States dollar", "sign": "$"},
-            "RUB": {"code": "RUB", "name": "Russian ruble", "sign": "₽"},
-            "EUR": {"code": "EUR", "name": "Euro", "sign": "€"},
-        }
+def create_currency(
+    code: str, without: list[str] | None = None
+) -> Mapping[str, object]:
+    currencies = {
+        "USD": {"code": "USD", "name": "United States dollar", "sign": "$"},
+        "RUB": {"code": "RUB", "name": "Russian ruble", "sign": "₽"},
+        "EUR": {"code": "EUR", "name": "Euro", "sign": "€"},
+    }
 
-        currency = dict(currencies[code])
+    currency = dict(currencies[code])
 
-        if without:
-            for key in without:
-                _ = currency.pop(key)
+    if without:
+        for key in without:
+            _ = currency.pop(key)
 
-        return currency
-
-    return create_currency
+    return currency
 
 
 def assert_currencies_response(

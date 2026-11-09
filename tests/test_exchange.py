@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 import requests
+from tests.conftest import create_currency
 
 from src.database.currency_dao import CurrencyDAO
 from src.database.exchange_rate_dao import ExchangeRateDAO
@@ -16,13 +17,12 @@ def test_get_exchange_returns_200(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
     frm: str,
     to: str,
     excepted: Decimal,
 ):
-    currency1 = currency_factory(code="RUB")
-    currency2 = currency_factory(code="EUR")
+    currency1 = create_currency(code="RUB")
+    currency2 = create_currency(code="EUR")
     _ = currency_dao.add_currency(**currency1)
     _ = currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")
@@ -45,11 +45,10 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="EUR")
-    currency3 = currency_factory(code="RUB")
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="EUR")
+    currency3 = create_currency(code="RUB")
     _ = currency_dao.add_currency(**currency1)
     _ = currency_dao.add_currency(**currency2)
     _ = currency_dao.add_currency(**currency3)
@@ -77,9 +76,8 @@ def test_get_exchange_from_a_to_usd_to_b_returns_200(
 def test_get_exchange_from_a_to_a_returns_200(
     server_url: Path,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency = currency_factory(code="USD")
+    currency = create_currency(code="USD")
     amount = 100
     currency_dao.add_currency(currency["code"], currency["name"], currency["sign"])
 
@@ -92,3 +90,10 @@ def test_get_exchange_from_a_to_a_returns_200(
     assert Decimal(response_data["convertedAmount"]) == Decimal(100)
     assert response_data["baseCurrency"]["code"] == currency["code"]
     assert response_data["targetCurrency"]["code"] == currency["code"]
+
+
+def test_get_exchange_with_non_existent_return_404(
+    server_url: Path,
+    currency_dao: CurrencyDAO,
+):
+    pass

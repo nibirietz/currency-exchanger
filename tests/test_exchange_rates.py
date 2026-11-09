@@ -7,19 +7,18 @@ import requests
 
 from src.database.currency_dao import CurrencyDAO
 from src.database.exchange_rate_dao import ExchangeRateDAO
-from tests.conftest import assert_currencies_response
+from tests.conftest import assert_currencies_response, create_currency
 
 
 def test_get_exchange_rates_returns_200(
     server_url: Path,
     currency_dao: CurrencyDAO,
     exchange_rate_dao: ExchangeRateDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
-    currency1_id = currency_dao.add_currency(**currency1)
-    currency2_id = currency_dao.add_currency(**currency2)
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
+    _ = currency_dao.add_currency(**currency1)
+    _ = currency_dao.add_currency(**currency2)
     exchange_rate_id = exchange_rate_dao.add_exchange_rates(
         currency1["code"], currency2["code"], Decimal("0.5")
     )
@@ -42,10 +41,9 @@ def test_add_exchange_rate_returns_201(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
     currency_dao.add_currency(**currency1)
     currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")
@@ -80,11 +78,10 @@ def test_add_exchange_rate_returns_201(
 def test_add_exchange_rate_with_missing_code_400(
     server_url: path,
     currency_dao: currencydao,
-    currency_factory: callable[[str], mapping[str, object]],
     field: str,
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
     currency_dao.add_currency(**currency1)
     currency_dao.add_currency(**currency2)
     rate = Decimal(790000)
@@ -108,10 +105,9 @@ def test_add_exchange_rate_with_missing_rate_400(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
     _ = currency_dao.add_currency(**currency1)
     _ = currency_dao.add_currency(**currency2)
 
@@ -136,9 +132,8 @@ def test_add_exchange_rate_with_duplicate_code_409(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency = currency_factory(code="USD")
+    currency = create_currency(code="USD")
     currency_id = currency_dao.add_currency(**currency)
     data = {
         "baseCurrencyCode": currency["code"],
@@ -162,10 +157,9 @@ def test_patch_exchange_rate_returns_200(
     server_url: Path,
     exchange_rate_dao: ExchangeRateDAO,
     currency_dao: CurrencyDAO,
-    currency_factory: Callable[[str], Mapping[str, object]],
 ):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
     _ = currency_dao.add_currency(**currency1)
     _ = currency_dao.add_currency(**currency2)
     rate = Decimal("0.5")

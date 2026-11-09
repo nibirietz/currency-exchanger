@@ -2,13 +2,14 @@ from dataclasses import asdict
 
 import pytest
 import requests
+from tests.conftest import create_currency
 
 from tests.conftest import assert_currencies_response
 
 
-def test_get_currencies_returns_200(server_url, currency_dao, currency_factory):
-    currency1 = currency_factory(code="USD")
-    currency2 = currency_factory(code="RUB")
+def test_get_currencies_returns_200(server_url, currency_dao):
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
     currency1_id = currency_dao.add_currency(**currency1)
     currency2_id = currency_dao.add_currency(**currency2)
 
@@ -28,8 +29,8 @@ def test_get_currencies_returns_200(server_url, currency_dao, currency_factory):
     assert_currencies_response(currency2, currency2_response)
 
 
-def test_get_currency_returns_200(server_url, currency_dao, currency_factory):
-    currency = currency_factory(code="USD")
+def test_get_currency_returns_200(server_url, currency_dao):
+    currency = create_currency(code="USD")
     currency_id = currency_dao.add_currency(**currency)
 
     response = requests.get(f"{server_url}/currency/USD", timeout=3)
@@ -54,8 +55,8 @@ def test_get_currency_without_code_400(server_url):
     assert response.status_code == 400
 
 
-def test_add_currency_returns_201(server_url, currency_dao, currency_factory):
-    currency = currency_factory(code="USD")
+def test_add_currency_returns_201(server_url, currency_dao):
+    currency = create_currency(code="USD")
 
     response = requests.post(f"{server_url}/currencies", data=currency, timeout=3)
     assert response.status_code == 201
@@ -73,9 +74,9 @@ def test_add_currency_returns_201(server_url, currency_dao, currency_factory):
 
 @pytest.mark.parametrize("empty_field", ["code", "name", "sign"])
 def test_add_currency_with_empty_field_returns_400(
-    empty_field, server_url, currency_dao, currency_factory
+    empty_field, server_url, currency_dao
 ):
-    data = currency_factory(code="USD")
+    data = create_currency(code="USD")
     data[empty_field] = ""
 
     response = requests.post(f"{server_url}/currencies", data=data, timeout=3)
@@ -89,9 +90,9 @@ def test_add_currency_with_empty_field_returns_400(
 
 @pytest.mark.parametrize("without", ["code", "name", "sign"])
 def test_add_currency_without_required_field_returns_400(
-    without, server_url, currency_dao, currency_factory
+    without, server_url, currency_dao
 ):
-    data = currency_factory(code="USD", without=[without])
+    data = create_currency(code="USD", without=[without])
 
     response = requests.post(f"{server_url}/currencies", data=data, timeout=3)
     assert response.status_code == 400
@@ -103,9 +104,9 @@ def test_add_currency_without_required_field_returns_400(
 
 
 def test_add_already_exists_currency_returns_409(
-    server_url, currency_dao, currency_factory
+    server_url, currency_dao
 ):
-    data = currency_factory(code="USD")
+    data = create_currency(code="USD")
 
     currency_dao.add_currency("USD", "United States dollar", "$")
 
@@ -118,9 +119,9 @@ def test_add_already_exists_currency_returns_409(
 
 @pytest.mark.parametrize("code", ["US", "USDT"])
 def test_add_currency_with_invalid_code_length_400(
-    server_url, currency_dao, currency_factory, code
+    server_url, currency_dao,  code
 ):
-    data = currency_factory(code="USD")
+    data = create_currency(code="USD")
     data["code"] = code
 
     response = requests.post(f"{server_url}/currencies", data=data, timeout=3)
@@ -133,9 +134,9 @@ def test_add_currency_with_invalid_code_length_400(
 
 
 def test_add_currency_with_invalid_sign_length_400(
-    server_url, currency_dao, currency_factory
+    server_url, currency_dao
 ):
-    data = currency_factory(code="USD")
+    data = create_currency(code="USD")
     data["sign"] = "$$$$"
 
     response = requests.post(f"{server_url}/currencies", data=data, timeout=3)
