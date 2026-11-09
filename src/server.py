@@ -112,7 +112,7 @@ def create_handler(
             self.end_headers()
 
         def send_json(self, status: int, data: dict | list[dict]):
-            response = json.dumps(data, use_decimal=True).encode("utf-8")
+            response = json.dumps(data, use_decimal=True, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
             self._set_cors_headers()
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -134,6 +134,7 @@ def create_handler(
                 currency_name = currency_name.strip().lower()
                 if currency_name == "":
                     self.send_json(400, {"message": "Код валюты отсутствует в адресе."})
+                    return
                 currency = self.currency_service.get_currency(currency_name)
                 currency_view = CurrencyMapper.response_to_dict(currency)
                 self.send_json(200, currency_view)
