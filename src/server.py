@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import asdict
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
@@ -51,11 +52,11 @@ def create_handler(
 
             return None, {}
 
-        def _request_parse_request(self):
+        def _request_parse_request(self) -> Mapping[str, object]:
             parsed_path = urlparse(self.path)
             query_parameters = parse_qs(parsed_path.query)
 
-            simple_query_params = {}
+            simple_query_params: Mapping[str, object] = {}
 
             for key, item in query_parameters.items():
                 simple_query_params[key] = item[0]
@@ -117,7 +118,7 @@ def create_handler(
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(response)))
             self.end_headers()
-            self.wfile.write(response)
+            _ = self.wfile.write(response)
 
         @router.route(method="GET", path="/currencies")
         def get_currencies(self):
@@ -131,7 +132,7 @@ def create_handler(
         def get_currency(self, currency_name: str):
             try:
                 currency = self.currency_service.get_currency(currency_name)
-                currency_view = asdict(currency)
+                currency_view = CurrencyMapper.response_to_dict(currency)
                 self.send_json(200, currency_view)
             except CurrencyNotFoundError as e:
                 self.send_json(404, {"message": str(e)})

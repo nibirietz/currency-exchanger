@@ -71,15 +71,14 @@ def test_add_currency_returns_201(server_url, currency_dao, currency_factory):
     assert_currencies_response(currency, asdict(currency_db))
 
 
-@pytest.mark.parametrize("without", ["code", "name", "sign"])
+@pytest.mark.parametrize("empty_field", ["code", "name", "sign"])
 def test_add_currency_with_empty_field_returns_400(
-    without, server_url, currency_dao, currency_factory
+    empty_field, server_url, currency_dao, currency_factory
 ):
     data = currency_factory(code="USD")
-    data[without] = " "
+    data[empty_field] = ""
 
     response = requests.post(f"{server_url}/currencies", data=data, timeout=3)
-    print(response.json())
     assert response.status_code == 400
     response_data = response.json()
 
