@@ -231,5 +231,7 @@ def create_handler(
                 self.send_json(200, exchange)
             except KeyError:
                 self.send_json(400, {"message": "Не хватает параметра."})
+            except ExchangeRateNotFoundError as e:
+                self.send_json(404, {"message": str(e)})
 
     return ServerHandler

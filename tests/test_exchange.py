@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 import requests
-from tests.conftest import create_currency
 
 from src.database.currency_dao import CurrencyDAO
 from src.database.exchange_rate_dao import ExchangeRateDAO
+from tests.conftest import create_currency
 
 
 @pytest.mark.parametrize(
@@ -34,7 +34,6 @@ def test_get_exchange_returns_200(
     response = requests.get(f"{server_url}/exchange", params=payload)
     assert response.status_code == 200
     response_data = response.json()
-    print(response_data)
 
     assert Decimal(response_data["convertedAmount"]) == excepted
     assert response_data["baseCurrency"]["code"] == frm
@@ -96,4 +95,14 @@ def test_get_exchange_with_non_existent_return_404(
     server_url: Path,
     currency_dao: CurrencyDAO,
 ):
-    pass
+    currency1 = create_currency(code="USD")
+    currency2 = create_currency(code="RUB")
+    amount = 100
+    currency_dao.add_currency(currency1["code"], currency1["name"], currency1["sign"])
+    currency_dao.add_currency(currency2["code"], currency2["name"], currency2["sign"])
+
+    payload = {"from": currency1["code"], "to": currency2["code"], "amount": amount}
+
+    response = requests.get(f"{server_url}/exchange", params=payload)
+    assert response.status_code == 404
+    assert "message" in response.json()
