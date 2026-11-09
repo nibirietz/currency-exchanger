@@ -149,7 +149,6 @@ def create_handler(
         def get_currency_missing_code(self):
             self.send_json(400, {"message": "Код валюты не написан в адресе."})
 
-        
         @router.route(method="GET", path="/currency/")
         def get_currency_missing_code_2(self):
             self.send_json(400, {"message": "Код валюты не написан в адресе."})
@@ -186,9 +185,7 @@ def create_handler(
             codes = codes.strip().upper()
             base_code, target_code = codes[:3], codes[3:]
 
-            if not re.fullmatch(
-                r"[A-Z]{3}", base_code
-            ) or not re.fullmatch(
+            if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
                 r"[A-Z]{3}", target_code
             ):
                 self.send_json(400, {"message": "Неправильный формат."})
@@ -246,10 +243,8 @@ def create_handler(
                 return
             base_code, target_code = codes[:3], codes[3:]
 
-            if not re.fullmatch(
-                r"[A-Z]{3}", exchange_rate_request.base_currency_code
-            ) or not re.fullmatch(
-                r"[A-Z]{3}", exchange_rate_request.target_currency_code
+            if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
+                r"[A-Z]{3}", target_code
             ):
                 self.send_json(400, {"message": "Неверный формат валют."})
                 return
@@ -269,6 +264,12 @@ def create_handler(
             try:
                 frm = kwargs["from"].upper()
                 to = kwargs["to"].upper()
+
+                if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
+                    r"[A-Z]{3}", target_code
+                ):
+                    self.send_json(400, {"message": "Неверный формат валют."})
+                    return
                 exchange = self.exchange_service.get_exchange(
                     frm, to, Decimal(kwargs["amount"])
                 )
