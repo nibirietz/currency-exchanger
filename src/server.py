@@ -182,7 +182,7 @@ def create_handler(
             if len(codes) != 6:
                 self.send_json(400, {"message": "Обменный курс не найден."})
                 return
-            codes = codes.strip().upper()
+            codes = codes.strip()
             base_code, target_code = codes[:3], codes[3:]
 
             if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
@@ -234,7 +234,7 @@ def create_handler(
         @router.route(method="PATCH", path="/exchangeRate/{codes}")
         def patch_exchange_rate(self, codes: str):
             body_dict = self.parse_from_to_dict()
-            codes = codes.strip().upper()
+            codes = codes.strip()
             if "rate" not in body_dict:
                 self.send_json(400, {"message": "Отсутствует необходимое поле."})
                 return
@@ -262,8 +262,8 @@ def create_handler(
         @router.route(method="GET", path="/exchange")
         def get_exchange(self, **kwargs):
             try:
-                frm = kwargs["from"].upper()
-                to = kwargs["to"].upper()
+                frm = kwargs["from"]
+                to = kwargs["to"]
 
                 if not re.fullmatch(r"[A-Z]{3}", base_code) or not re.fullmatch(
                     r"[A-Z]{3}", target_code
@@ -278,5 +278,9 @@ def create_handler(
                 self.send_json(400, {"message": "Не хватает параметра."})
             except ExchangeRateNotFoundError as e:
                 self.send_json(404, {"message": str(e)})
+            except TypeError:
+                self.send_json(400, {"message": "rate должен быть числом."})
+            except ExchangeRateMatchingCodes as e:
+                self.send_json(400, {"message": str(e)})
 
     return ServerHandler

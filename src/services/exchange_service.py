@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from src.database.currency_dao import CurrencyDAO
 from src.database.exchange_rate_dao import ExchangeRateDAO
-from src.exceptions import ExchangeRateNotFoundError
+from src.exceptions import ExchangeRateMatchingCodes, ExchangeRateNotFoundError
 from src.mappers.exchange_mapper import ExchangeMapper
 
 
@@ -74,13 +74,7 @@ class ExchangeService:
 
     def get_exchange(self, base_code: str, target_code: str, amount: Decimal) -> dict:
         if base_code == target_code:
-            currency = self.currency_dao.get_currency(base_code)
-            if not currency:
-                raise ExchangeRateNotFoundError("Обменная пара не найдена")
-            exchange = ExchangeMapper.currencies_to_dict(
-                currency, currency, Decimal(1), amount, amount
-            )
-            return exchange
+            raise ExchangeRateMatchingCodes("Одинаковые коды.")
 
         exchange = self._get_direct_rate(base_code, target_code, amount)
         if exchange is not None:
